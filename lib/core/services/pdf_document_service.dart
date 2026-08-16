@@ -74,32 +74,42 @@ class PdfDocumentService {
       }
     }
 
+    // MultiPage (et non Page) : un document avec beaucoup de lignes
+    // (proforma, facture...) doit basculer sur une 2e page plutôt que
+    // de voir son tableau/total/pied de page silencieusement coupés —
+    // contrairement à Flutter, package:pdf ne signale pas un
+    // dépassement de page, il l'ignore purement et simplement.
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(28),
-        build: (context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              _buildEntete(settings, logoImage),
-              pw.SizedBox(height: 14),
-              pw.Divider(color: _couleurBordure, thickness: 1),
-              pw.SizedBox(height: 14),
-              _buildInfosClientEtDocument(document),
-              pw.SizedBox(height: 18),
-              _buildTableauArticles(document),
-              pw.SizedBox(height: 16),
-              _buildTotal(document),
-              pw.Spacer(),
-              pw.Divider(color: _couleurBordure, thickness: 1),
-              pw.SizedBox(height: 10),
+        header: (context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            _buildEntete(settings, logoImage),
+            pw.SizedBox(height: 14),
+            pw.Divider(color: _couleurBordure, thickness: 1),
+            pw.SizedBox(height: 14),
+          ],
+        ),
+        footer: (context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Divider(color: _couleurBordure, thickness: 1),
+            pw.SizedBox(height: 10),
+            if (context.pageNumber == context.pagesCount)
               document.typeDocument == 'ACHAT'
                   ? _buildPiedDePageAchat()
                   : _buildPiedDePage(settings),
-            ],
-          );
-        },
+          ],
+        ),
+        build: (context) => [
+          _buildInfosClientEtDocument(document),
+          pw.SizedBox(height: 18),
+          _buildTableauArticles(document),
+          pw.SizedBox(height: 16),
+          _buildTotal(document),
+        ],
       ),
     );
 
