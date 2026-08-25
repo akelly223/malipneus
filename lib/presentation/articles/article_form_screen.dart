@@ -31,11 +31,37 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
   final _prixVenteController = TextEditingController();
   final _stockMinimumController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _marqueController = TextEditingController();
+  final _dimensionController = TextEditingController();
+  final _largeurController = TextEditingController();
+  final _hauteurController = TextEditingController();
+  final _diametreController = TextEditingController();
+  final _poidsController = TextEditingController();
   int? _categorieId;
-  int? _supplierId;
+  String? _type;
+  String? _saison;
+  String _etat = 'neuf';
   bool _isLoading = false;
   bool _isInitialised = false;
   ArticleEntity? _articleExistant;
+
+  static const _typesPneu = [
+    'Tourisme',
+    'Camionnette',
+    'Poids lourd',
+    'Moto',
+    'Agricole',
+    'Génie civil',
+    'Autre',
+  ];
+  static const _saisons = ['Toutes saisons', 'Été', 'Hiver'];
+  static const _etats = ['neuf', 'occasion', 'rechape'];
+
+  String _libelleEtat(String etat) => switch (etat) {
+        'occasion' => 'Occasion',
+        'rechape' => 'Rechapé',
+        _ => 'Neuf',
+      };
 
   bool get _estEdition => widget.articleId != null;
 
@@ -54,6 +80,12 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
     _prixVenteController.dispose();
     _stockMinimumController.dispose();
     _descriptionController.dispose();
+    _marqueController.dispose();
+    _dimensionController.dispose();
+    _largeurController.dispose();
+    _hauteurController.dispose();
+    _diametreController.dispose();
+    _poidsController.dispose();
     super.dispose();
   }
 
@@ -70,8 +102,19 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
         _prixVenteController.text = article.prixVente.toStringAsFixed(0);
         _stockMinimumController.text = article.stockMinimum.toStringAsFixed(0);
         _descriptionController.text = article.description ?? '';
+        _marqueController.text = article.marque ?? '';
+        _dimensionController.text = article.dimension ?? '';
+        _largeurController.text =
+            article.largeur?.toStringAsFixed(0) ?? '';
+        _hauteurController.text =
+            article.hauteur?.toStringAsFixed(0) ?? '';
+        _diametreController.text =
+            article.diametre?.toStringAsFixed(0) ?? '';
+        _poidsController.text = article.poids?.toStringAsFixed(1) ?? '';
         _categorieId = article.categorieId;
-        _supplierId = article.supplierId;
+        _type = article.type;
+        _saison = article.saison;
+        _etat = article.etat;
         _isInitialised = true;
       });
     }
@@ -107,6 +150,16 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
     final description = _descriptionController.text.trim().isEmpty
         ? null
         : _descriptionController.text.trim();
+    final marque = _marqueController.text.trim().isEmpty
+        ? null
+        : _marqueController.text.trim();
+    final dimension = _dimensionController.text.trim().isEmpty
+        ? null
+        : _dimensionController.text.trim();
+    final largeur = double.tryParse(_largeurController.text);
+    final hauteur = double.tryParse(_hauteurController.text);
+    final diametre = double.tryParse(_diametreController.text);
+    final poids = double.tryParse(_poidsController.text);
 
     try {
       if (_estEdition && _articleExistant != null) {
@@ -121,8 +174,17 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
           stockTotal: _articleExistant!.stockTotal,
           dateCreation: _articleExistant!.dateCreation,
           actif: true,
-          supplierId: _supplierId,
           description: description,
+          marque: marque,
+          dimension: dimension,
+          largeur: largeur,
+          hauteur: hauteur,
+          diametre: diametre,
+          poids: poids,
+          type: _type,
+          saison: _saison,
+          etat: _etat,
+          chargementOrigineId: _articleExistant!.chargementOrigineId,
         ));
       } else {
         await repo.createArticle(
@@ -132,8 +194,16 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
           prixAchat: prixAchat,
           prixVente: prixVente,
           stockMinimum: stockMinimum,
-          supplierId: _supplierId,
           description: description,
+          marque: marque,
+          dimension: dimension,
+          largeur: largeur,
+          hauteur: hauteur,
+          diametre: diametre,
+          poids: poids,
+          type: _type,
+          saison: _saison,
+          etat: _etat,
         );
       }
       ref.invalidate(articlesListProvider);
@@ -199,7 +269,6 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
   Widget build(BuildContext context) {
     if (_estEdition) _chargerArticleExistant();
     final categoriesAsync = ref.watch(categoriesListProvider);
-    final depotSuppliersAsync = ref.watch(depotSuppliersProvider);
     final utilisateur = ref.watch(sessionProvider);
     final peutVoirPrixAchat = Permissions.peutVoirPrixAchat(utilisateur);
     final peutSupprimer = Permissions.peutSupprimerArticle(utilisateur);
@@ -216,7 +285,7 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
       appBar: AppBar(
         title: Text(modeLectureSeule
             ? 'Détail article'
-            : (_estEdition ? 'Modifier l\'article' : 'Nouvel article')),
+            : (_estEdition ? "Modifier l'article" : 'Nouvel article')),
         actions: [
           if (_estEdition && peutSupprimer)
             IconButton(
@@ -264,7 +333,7 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
                         child: AppTextField(
                           label: 'Code article',
                           controller: _codeController,
-                          hint: 'Ex: ART-001',
+                          hint: 'Ex: PNEU-001',
                           enabled: !modeLectureSeule,
                           validator: (v) => (v == null || v.trim().isEmpty)
                               ? 'Code requis'
@@ -275,9 +344,9 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
-                    label: 'Nom de l\'article',
+                    label: "Nom de l'article",
                     controller: _nomController,
-                    hint: 'Ex: Riz parfumé 25kg',
+                    hint: 'Ex: Michelin Energy XM2 195/65 R15',
                     enabled: !modeLectureSeule,
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Nom requis' : null,
@@ -331,43 +400,148 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
                     loading: () => const SizedBox.shrink(),
                     error: (_, __) => const SizedBox.shrink(),
                   ),
+                  const SizedBox(height: 24),
+                  const Text("Caractéristiques de l'article",
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AppTextField(
+                          label: 'Marque',
+                          controller: _marqueController,
+                          hint: 'Ex: Michelin',
+                          enabled: !modeLectureSeule,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: AppTextField(
+                          label: 'Dimension',
+                          controller: _dimensionController,
+                          hint: 'Ex: 195/65 R15',
+                          enabled: !modeLectureSeule,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
-                  depotSuppliersAsync.when(
-                    data: (depotSuppliers) {
-                      if (depotSuppliers.isEmpty &&
-                          _supplierId == null) {
-                        return const SizedBox.shrink();
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Auteur (dépôt-vente)',
-                              style: TextStyle(fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 6),
-                          DropdownButtonFormField<int?>(
-                            initialValue: _supplierId,
-                            decoration: const InputDecoration(
-                                hintText: 'Aucun (article normal)'),
-                            items: [
-                              const DropdownMenuItem<int?>(
-                                value: null,
-                                child: Text('Aucun (article normal)'),
-                              ),
-                              ...depotSuppliers.map((s) => DropdownMenuItem<int?>(
-                                    value: s.id,
-                                    child: Text(
-                                        '${s.nom} (${s.partAuteurPct.toStringAsFixed(0)}%)'),
-                                  )),
-                            ],
-                            onChanged: modeLectureSeule
-                                ? null
-                                : (v) => setState(() => _supplierId = v),
-                          ),
-                        ],
-                      );
-                    },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AppTextField(
+                          label: 'Largeur (mm)',
+                          controller: _largeurController,
+                          keyboardType: TextInputType.number,
+                          enabled: !modeLectureSeule,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: AppTextField(
+                          label: 'Hauteur/profil (%)',
+                          controller: _hauteurController,
+                          keyboardType: TextInputType.number,
+                          enabled: !modeLectureSeule,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: AppTextField(
+                          label: 'Diamètre (pouces)',
+                          controller: _diametreController,
+                          keyboardType: TextInputType.number,
+                          enabled: !modeLectureSeule,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: AppTextField(
+                          label: 'Poids (kg)',
+                          controller: _poidsController,
+                          hint: 'Pour la répartition "par poids"',
+                          keyboardType: TextInputType.number,
+                          enabled: !modeLectureSeule,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Type',
+                                style: TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String?>(
+                              initialValue: _type,
+                              decoration:
+                                  const InputDecoration(hintText: 'Aucun'),
+                              items: [
+                                const DropdownMenuItem<String?>(
+                                    value: null, child: Text('Aucun')),
+                                ..._typesPneu.map((t) =>
+                                    DropdownMenuItem(value: t, child: Text(t))),
+                              ],
+                              onChanged: modeLectureSeule
+                                  ? null
+                                  : (v) => setState(() => _type = v),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Saison',
+                                style: TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String?>(
+                              initialValue: _saison,
+                              decoration: const InputDecoration(
+                                  hintText: 'Non applicable'),
+                              items: [
+                                const DropdownMenuItem<String?>(
+                                    value: null,
+                                    child: Text('Non applicable')),
+                                ..._saisons.map((s) =>
+                                    DropdownMenuItem(value: s, child: Text(s))),
+                              ],
+                              onChanged: modeLectureSeule
+                                  ? null
+                                  : (v) => setState(() => _saison = v),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('État',
+                                style: TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              initialValue: _etat,
+                              items: _etats
+                                  .map((e) => DropdownMenuItem(
+                                      value: e, child: Text(_libelleEtat(e))))
+                                  .toList(),
+                              onChanged: modeLectureSeule
+                                  ? null
+                                  : (v) => setState(() => _etat = v ?? 'neuf'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -424,7 +598,7 @@ class _ArticleFormScreenState extends ConsumerState<ArticleFormScreen> {
                   if (!modeLectureSeule) ...[
                     const SizedBox(height: 28),
                     AppButton(
-                      label: _estEdition ? 'Enregistrer' : 'Créer l\'article',
+                      label: _estEdition ? 'Enregistrer' : "Créer l'article",
                       icon: Icons.check_circle_outline,
                       isLoading: _isLoading,
                       onPressed: _enregistrer,
@@ -482,7 +656,7 @@ class _DialogueConfirmationSuppressionState
       title: const Row(
         children: [
           Text('⚠️ ', style: TextStyle(fontSize: 20)),
-          Text('Suppression d\'article'),
+          Text("Suppression de l'article"),
         ],
       ),
       content: SizedBox(
@@ -497,13 +671,13 @@ class _DialogueConfirmationSuppressionState
                       'existants. Il sera archivé (retiré des listes) sans '
                       'effacer l\'historique — l\'action reste irréversible '
                       'sans intervention technique.'
-                  : 'Vous êtes sur le point de supprimer définitivement cet '
+                  : 'Vous êtes sur le point de supprimer définitivement ce '
                       'article. Il n\'apparaît dans aucun document existant. '
                       'Cette action est irréversible.',
             ),
             const SizedBox(height: 20),
             const Text(
-              'Pour confirmer, saisissez exactement le nom de l\'article :',
+              "Pour confirmer, saisissez exactement le nom de l'article :",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),

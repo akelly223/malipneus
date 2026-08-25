@@ -2,7 +2,7 @@
 
 Ce dossier contient tout ce qu'il faut pour transformer le projet
 Flutter en un véritable installateur Windows professionnel
-(StockMali_Setup.exe).
+(MaliPneus_Setup.exe).
 
 ## Fichiers de ce dossier
 
@@ -10,8 +10,8 @@ Flutter en un véritable installateur Windows professionnel
   Compiler sur Windows. Génère le Setup.exe final.
 - **`LICENSE.txt`** — Texte affiché à l'utilisateur pendant
   l'installation (déjà rédigé, modifiable si besoin).
-- **`app_icon.ico`** — **à fournir toi-même** (pas inclus), icône de
-  l'application au format .ico.
+- **`app_icon.ico`** — icône de l'application au format .ico (logo
+  MaliPneus).
 - **`PROCEDURE_BUILD.md`** — Procédure complète, étape par étape,
   pour générer l'exe Flutter puis le Setup.exe avec Inno Setup.
 - **`CHECKLIST_DEPLOIEMENT.md`** — Checklist à utiliser avant et
@@ -24,10 +24,8 @@ Flutter en un véritable installateur Windows professionnel
 
 1. Lis `PROCEDURE_BUILD.md` du début à la fin avant de lancer quoi
    que ce soit.
-2. Fournis `app_icon.ico` (ou retire temporairement la ligne
-   correspondante dans `setup.iss`).
-3. Suis les 5 étapes de `PROCEDURE_BUILD.md`.
-4. Avant toute livraison réelle, parcours `CHECKLIST_DEPLOIEMENT.md`
+2. Suis les 5 étapes de `PROCEDURE_BUILD.md`.
+3. Avant toute livraison réelle, parcours `CHECKLIST_DEPLOIEMENT.md`
    intégralement — ne pas sauter cette étape, même pour une
    installation "de test" chez un commerçant.
 

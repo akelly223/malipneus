@@ -3,11 +3,15 @@ import '../local/database.dart';
 import '../../domain/entities/inventory.dart';
 import '../../domain/repositories/inventory_repository.dart';
 import '../../core/constants/db_constants.dart';
+import '../../core/services/stock_lot_service.dart';
 
 class InventoryRepositoryImpl implements InventoryRepository {
   final AppDatabase db;
+  late final StockLotService _lots;
 
-  InventoryRepositoryImpl(this.db);
+  InventoryRepositoryImpl(this.db) {
+    _lots = StockLotService(db);
+  }
 
   static String _normaliser(String code) => code.trim().toLowerCase();
 
@@ -292,7 +296,8 @@ class InventoryRepositoryImpl implements InventoryRepository {
           storeId: inventory.storeId,
           delta: ecart,
         );
-        await db.stockDao.createMovement(StockMovementsCompanion.insert(
+        final movementId =
+            await db.stockDao.createMovement(StockMovementsCompanion.insert(
           articleId: ligne.articleId!,
           storeId: inventory.storeId,
           typeMouvement: DbConstants.movementInventaire,
@@ -300,6 +305,24 @@ class InventoryRepositoryImpl implements InventoryRepository {
           reference: Value(inventory.numero),
           userId: userId,
         ));
+
+        if (ecart > 0) {
+          final article = await db.articlesDao.getArticleById(ligne.articleId!);
+          await _lots.enregistrerEntree(
+            articleId: ligne.articleId!,
+            storeId: inventory.storeId,
+            quantite: ecart,
+            coutUnitaire: article?.prixAchat ?? 0,
+            sourceType: 'ajustement',
+          );
+        } else {
+          await _lots.consommerFifo(
+            articleId: ligne.articleId!,
+            storeId: inventory.storeId,
+            quantite: -ecart,
+            movementId: movementId,
+          );
+        }
       }
 
       await db.inventoriesDao.marquerValide(

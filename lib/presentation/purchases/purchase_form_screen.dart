@@ -16,6 +16,7 @@ import '../../core/widgets/article_quick_create_dialog.dart';
 import '../../core/widgets/discount_input_field.dart';
 import '../../core/widgets/discount_summary.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../core/constants/db_constants.dart';
 import '../../domain/entities/article.dart';
 import '../../domain/entities/purchase_cart_item_input.dart';
@@ -25,6 +26,7 @@ import '../../core/widgets/access_denied_view.dart';
 import '../../core/permissions/permissions.dart';
 import '../suppliers/suppliers_list_screen.dart';
 import '../stores/providers/store_provider.dart';
+import '../loadings/providers/loadings_provider.dart';
 import 'providers/purchase_provider.dart';
 
 class PurchaseFormScreen extends ConsumerStatefulWidget {
@@ -34,10 +36,15 @@ class PurchaseFormScreen extends ConsumerStatefulWidget {
   /// ou 'commande' (bon de commande, sans impact stock).
   final String initialStatut;
 
+  /// Chargement pré-sélectionné, ex. quand on arrive depuis l'écran
+  /// détail d'un chargement via "Ajouter un achat pour ce chargement".
+  final int? initialChargementId;
+
   const PurchaseFormScreen({
     super.key,
     this.purchaseId,
     this.initialStatut = DbConstants.purchaseStatutRecu,
+    this.initialChargementId,
   });
 
   @override
@@ -49,6 +56,8 @@ class _PurchaseFormScreenState extends ConsumerState<PurchaseFormScreen> {
   final List<PurchaseCartItemInput> _panier = [];
   int? _supplierId;
   int? _storeId;
+  int? _chargementId;
+  DateTime _dateAchat = DateTime.now();
   RemiseGlobale _remise = RemiseGlobale.zero;
   bool _isLoading = false;
   bool _isInitialise = false;
@@ -65,6 +74,7 @@ class _PurchaseFormScreenState extends ConsumerState<PurchaseFormScreen> {
   void initState() {
     super.initState();
     _statut = widget.initialStatut;
+    _chargementId = widget.initialChargementId;
     _draftService = ref.read(draftServiceProvider);
     if (!_estEdition) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _chargerBrouillon());
@@ -140,6 +150,7 @@ class _PurchaseFormScreenState extends ConsumerState<PurchaseFormScreen> {
       _supplierId = achat.supplierId;
       _storeId = achat.storeId;
       _statut = achat.statut;
+      _dateAchat = achat.dateCreation;
       _remise = RemiseGlobale(valeur: achat.remiseGlobale);
       _panier.clear();
       _panier.addAll(achat.items.map((item) => PurchaseCartItemInput(
@@ -256,12 +267,22 @@ class _PurchaseFormScreenState extends ConsumerState<PurchaseFormScreen> {
         montantPayeInitial: resultat?.montant ?? 0,
         modePaiementInitial: resultat?.mode,
         statut: _statut,
+        chargementId: _chargementId,
+        dateAchat: _dateAchat,
       );
       _estSoumis = true;
       _timerSauvegarde?.cancel();
       await _draftService.supprimerAchat();
       ref.invalidate(filteredPurchasesProvider);
       invalidateStockDependentProviders(ref);
+      if (_chargementId != null) {
+        // Rafraîchit la fiche du chargement si elle est restée ouverte
+        // dans la pile de navigation (ex: onglet précédent) : sans ça,
+        // son bloc Rentabilité et sa liste "Achats liés" resteraient
+        // affichés avec les données d'avant cet achat.
+        ref.invalidate(purchasesForLoadingProvider(_chargementId!));
+        ref.invalidate(loadingRentabiliteProvider(_chargementId!));
+      }
       if (mounted) context.pushReplacement('/purchases/$purchaseId');
     } catch (e) {
       setState(() => _isLoading = false);
@@ -312,6 +333,7 @@ class _PurchaseFormScreenState extends ConsumerState<PurchaseFormScreen> {
         modifieParUserId: user?.id ?? 0,
         items: _panier,
         remiseGlobale: _montantRemise,
+        dateAchat: _dateAchat,
       );
       ref.invalidate(filteredPurchasesProvider);
       ref.invalidate(purchaseByIdProvider(widget.purchaseId!));
@@ -562,6 +584,67 @@ class _PurchaseFormScreenState extends ConsumerState<PurchaseFormScreen> {
                     loading: () => const SizedBox.shrink(),
                     error: (_, __) => const SizedBox.shrink(),
                   ),
+                  const SizedBox(height: 16),
+                  const Text('Date de l\'achat',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _dateAchat,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                        locale: const Locale('fr', 'FR'),
+                      );
+                      if (picked != null) {
+                        setState(() => _dateAchat = picked);
+                        _planifierSauvegarde();
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                          suffixIcon: Icon(Icons.calendar_today_outlined)),
+                      child: Text(DateFormatter.formatDate(_dateAchat)),
+                    ),
+                  ),
+                  if (!_estEdition) ...[
+                    const SizedBox(height: 16),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final loadingsAsync = ref.watch(loadingsListProvider);
+                        return loadingsAsync.when(
+                          data: (loadings) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Chargement (optionnel)',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<int?>(
+                                initialValue: _chargementId,
+                                decoration: const InputDecoration(
+                                    hintText:
+                                        'Rattacher à un chargement'),
+                                items: [
+                                  const DropdownMenuItem<int?>(
+                                      value: null, child: Text('Aucun')),
+                                  ...loadings.map((l) => DropdownMenuItem(
+                                      value: l.id, child: Text(l.numero))),
+                                ],
+                                onChanged: (v) {
+                                  setState(() => _chargementId = v);
+                                  _planifierSauvegarde();
+                                },
+                              ),
+                            ],
+                          ),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        );
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   DiscountInputField(
                     remise: _remise,
@@ -620,6 +703,8 @@ class _PurchaseLineTile extends StatefulWidget {
 class _PurchaseLineTileState extends State<_PurchaseLineTile> {
   late TextEditingController _quantiteController;
   late TextEditingController _prixController;
+  final FocusNode _quantiteFocus = FocusNode();
+  final FocusNode _prixFocus = FocusNode();
 
   @override
   void initState() {
@@ -628,18 +713,36 @@ class _PurchaseLineTileState extends State<_PurchaseLineTile> {
         TextEditingController(text: widget.item.quantite.toStringAsFixed(0));
     _prixController = TextEditingController(
         text: widget.item.prixAchatUnitaire.toStringAsFixed(0));
+    _quantiteFocus.addListener(() {
+      if (!_quantiteFocus.hasFocus) _finaliserQuantite();
+    });
+    _prixFocus.addListener(() {
+      if (!_prixFocus.hasFocus) _finaliserPrix();
+    });
   }
 
+  // Ne jamais réécrire un champ pendant que l'utilisateur est en train
+  // de le modifier : le TextEditingController est la source de vérité
+  // tant que le champ a le focus. Une resynchronisation ici (ex: après
+  // un `setState` déclenché par CE MÊME champ, ou par la ligne
+  // voisine) écraserait sinon une saisie en cours (ex: taper "500" se
+  // retrouve tronqué à "1", "5", "50"...) — c'est la cause du bug de
+  // quantité audité.
   @override
   void didUpdateWidget(_PurchaseLineTile old) {
     super.didUpdateWidget(old);
-    final quantiteAffichee = double.tryParse(_quantiteController.text);
-    if (quantiteAffichee != widget.item.quantite) {
-      _quantiteController.text = widget.item.quantite.toStringAsFixed(0);
+    if (!_quantiteFocus.hasFocus) {
+      final quantiteAffichee = double.tryParse(_quantiteController.text);
+      if (quantiteAffichee != widget.item.quantite) {
+        _quantiteController.text = widget.item.quantite.toStringAsFixed(0);
+      }
     }
-    final prixAffiche = double.tryParse(_prixController.text);
-    if (prixAffiche != widget.item.prixAchatUnitaire) {
-      _prixController.text = widget.item.prixAchatUnitaire.toStringAsFixed(0);
+    if (!_prixFocus.hasFocus) {
+      final prixAffiche = double.tryParse(_prixController.text);
+      if (prixAffiche != widget.item.prixAchatUnitaire) {
+        _prixController.text =
+            widget.item.prixAchatUnitaire.toStringAsFixed(0);
+      }
     }
   }
 
@@ -647,18 +750,63 @@ class _PurchaseLineTileState extends State<_PurchaseLineTile> {
   void dispose() {
     _quantiteController.dispose();
     _prixController.dispose();
+    _quantiteFocus.dispose();
+    _prixFocus.dispose();
     super.dispose();
   }
 
+  /// Pousse la valeur courante SI elle est déjà un nombre valide (permet
+  /// au total de se recalculer en direct pendant la saisie) — mais ne
+  /// force jamais de valeur de repli (ex: 1) dans le champ pendant que
+  /// l'utilisateur tape encore : un champ vide/partiel (ex: "" après un
+  /// effacement, avant de taper le nouveau chiffre) reste tel quel tant
+  /// qu'il a le focus, voir [_finaliserQuantite]/[_finaliserPrix].
   void _update() {
-    final qte = double.tryParse(_quantiteController.text) ?? 1;
-    final prix = double.tryParse(_prixController.text) ?? 0;
+    final qte = double.tryParse(_quantiteController.text);
+    final prix = double.tryParse(_prixController.text);
+    if (qte == null || qte <= 0 || prix == null) return;
     widget.onChanged(PurchaseCartItemInput(
       articleId: widget.item.articleId,
       articleNom: widget.item.articleNom,
-      quantite: qte <= 0 ? 1 : qte,
+      quantite: qte,
       prixAchatUnitaire: prix,
     ));
+  }
+
+  /// À la perte de focus : si le champ est vide ou invalide, revient à
+  /// la dernière quantité valide connue plutôt que de laisser un champ
+  /// incohérent avec les données réellement enregistrées.
+  void _finaliserQuantite() {
+    final qte = double.tryParse(_quantiteController.text);
+    if (qte == null || qte <= 0) {
+      _quantiteController.text = widget.item.quantite.toStringAsFixed(0);
+      return;
+    }
+    if (qte != widget.item.quantite) {
+      widget.onChanged(PurchaseCartItemInput(
+        articleId: widget.item.articleId,
+        articleNom: widget.item.articleNom,
+        quantite: qte,
+        prixAchatUnitaire: widget.item.prixAchatUnitaire,
+      ));
+    }
+  }
+
+  void _finaliserPrix() {
+    final prix = double.tryParse(_prixController.text);
+    if (prix == null) {
+      _prixController.text =
+          widget.item.prixAchatUnitaire.toStringAsFixed(0);
+      return;
+    }
+    if (prix != widget.item.prixAchatUnitaire) {
+      widget.onChanged(PurchaseCartItemInput(
+        articleId: widget.item.articleId,
+        articleNom: widget.item.articleNom,
+        quantite: widget.item.quantite,
+        prixAchatUnitaire: prix,
+      ));
+    }
   }
 
   @override
@@ -680,10 +828,12 @@ class _PurchaseLineTileState extends State<_PurchaseLineTile> {
             width: 70,
             child: TextField(
               controller: _quantiteController,
+              focusNode: _quantiteFocus,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               decoration: const InputDecoration(labelText: 'Qté'),
               onChanged: (_) => _update(),
+              onSubmitted: (_) => _finaliserQuantite(),
             ),
           ),
           const SizedBox(width: 10),
@@ -691,10 +841,12 @@ class _PurchaseLineTileState extends State<_PurchaseLineTile> {
             width: 110,
             child: TextField(
               controller: _prixController,
+              focusNode: _prixFocus,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               decoration: const InputDecoration(labelText: 'Prix achat'),
               onChanged: (_) => _update(),
+              onSubmitted: (_) => _finaliserPrix(),
             ),
           ),
           const SizedBox(width: 10),

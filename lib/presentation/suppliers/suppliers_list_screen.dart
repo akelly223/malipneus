@@ -82,8 +82,6 @@ class SuppliersListScreen extends ConsumerWidget {
           telephone: telController.text.trim(),
           adresse: adresseController.text.trim(),
           dateCreation: existant.dateCreation,
-          estDepot: existant.estDepot,
-          partAuteurPct: existant.partAuteurPct,
         ));
       }
       ref.invalidate(suppliersListProvider);

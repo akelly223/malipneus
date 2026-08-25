@@ -10,6 +10,7 @@ mixin _$PaymentsDaoMixin on DatabaseAccessor<AppDatabase> {
   $UsersTable get users => attachedDatabase.users;
   $InvoicesTable get invoices => attachedDatabase.invoices;
   $SuppliersTable get suppliers => attachedDatabase.suppliers;
+  $LoadingsTable get loadings => attachedDatabase.loadings;
   $PurchasesTable get purchases => attachedDatabase.purchases;
   $PaymentsTable get payments => attachedDatabase.payments;
   $ClientDebtsTable get clientDebts => attachedDatabase.clientDebts;

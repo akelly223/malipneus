@@ -9,6 +9,7 @@ mixin _$InventoriesDaoMixin on DatabaseAccessor<AppDatabase> {
   $UsersTable get users => attachedDatabase.users;
   $InventoriesTable get inventories => attachedDatabase.inventories;
   $SuppliersTable get suppliers => attachedDatabase.suppliers;
+  $LoadingsTable get loadings => attachedDatabase.loadings;
   $ArticlesTable get articles => attachedDatabase.articles;
   $InventoryLinesTable get inventoryLines => attachedDatabase.inventoryLines;
 }

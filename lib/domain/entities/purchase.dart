@@ -40,6 +40,10 @@ class PurchaseEntity {
   final String? modifieParNom;
   final List<PurchaseItemEntity> items;
 
+  /// Chargement auquel cet achat est rattaché, si applicable.
+  final int? chargementId;
+  final String? chargementNumero;
+
   const PurchaseEntity({
     required this.id,
     required this.numero,
@@ -61,6 +65,8 @@ class PurchaseEntity {
     this.dateModification,
     this.modifieParNom,
     this.items = const [],
+    this.chargementId,
+    this.chargementNumero,
   });
 
   double get resteAPayer => totalFinal - montantPaye;

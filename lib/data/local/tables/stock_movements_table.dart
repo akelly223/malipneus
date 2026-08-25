@@ -24,13 +24,17 @@ class StockMovements extends Table {
   TextColumn get reference => text().nullable()();
 
   /// Identifiant commun à toutes les lignes créées en une seule fois
-  /// depuis le dialogue "Mouvement manuel" (un même lot de réception
-  /// dépôt-vente) — permet de les regrouper dans l'historique et de
-  /// régénérer le reçu correspondant après coup.
+  /// depuis le dialogue "Mouvement manuel" (un même lot de pneus
+  /// réceptionné ou sorti) — permet de les regrouper dans l'historique
+  /// et de régénérer le reçu correspondant après coup.
   TextColumn get groupeId => text().nullable()();
 
   DateTimeColumn get dateMouvement =>
       dateTime().withDefault(currentDateAndTime)();
 
   IntColumn get userId => integer().references(Users, #id)();
+
+  /// Commentaire libre optionnel (module Pertes & ajustements), en plus
+  /// de [reference] qui porte le motif court.
+  TextColumn get commentaire => text().nullable()();
 }

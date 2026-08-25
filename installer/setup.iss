@@ -22,12 +22,24 @@
 ; Identifiant unique généré une seule fois pour cette application —
 ; NE JAMAIS CHANGER entre les versions, sinon Windows considère
 ; chaque mise à jour comme une application différente.
-AppId={{8F3A1C2E-4B5D-4E6F-9A1B-2C3D4E5F6A7B}}
+;
+; Regénéré le 22/08/2026 : l'ancien AppId de ce fichier était celui
+; hérité du clonage depuis MaliStock (gestion_commerciale), ce qui
+; faisait que Windows traitait MaliPneus et MaliStock comme LA MÊME
+; application (même clé de registre d'installation) — cause du
+; conflit rencontré à l'installation. Ce nouveau GUID est propre à
+; MaliPneus et ne doit plus jamais être changé à partir de maintenant.
+AppId={{CCC32B06-3E8E-4D05-B29C-D990F805C408}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppShortName}
 DefaultGroupName={#MyAppShortName}
+; Affiche explicitement la page "Choisir le dossier de destination"
+; pendant l'installation (comportement standard des logiciels
+; professionnels) — l'utilisateur peut cliquer sur "Parcourir..." et
+; choisir un autre dossier que celui proposé par défaut.
+DisableDirPage=no
 ; Dossier de sortie du Setup.exe généré.
 OutputDir=..\dist
 OutputBaseFilename={#MyAppShortName}_Setup
@@ -69,7 +81,10 @@ Name: "{group}\Désinstaller {#MyAppShortName}"; Filename: "{uninstallexe}"
 ; Bureau (seulement si la case correspondante est cochée).
 Name: "{autodesktop}\{#MyAppShortName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 ; Démarrage automatique de Windows (optionnel, décoché par défaut).
-Name: "{userstartup}\{#MyAppShortName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startupicon
+; {commonstartup} (et non {userstartup}) car PrivilegesRequired=admin :
+; l'installateur tourne dans le contexte admin, {userstartup} pointerait
+; alors vers le mauvais dossier utilisateur.
+Name: "{commonstartup}\{#MyAppShortName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startupicon
 
 [Run]
 ; Propose de lancer l'application immédiatement après l'installation.
@@ -114,4 +129,20 @@ end;
   - Pour un vrai nettoyage complet (rare, demandé explicitement par
     le commerçant), il faudrait supprimer ce dossier manuellement —
     ce script ne le fait jamais automatiquement, par sécurité.
+  ============================================================ }
+
+{ ============================================================
+  NOTE SUR LE CHANGEMENT D'AppId (22/08/2026) :
+
+  Si une version antérieure de MaliPneus a déjà été installée avec
+  CE script AVANT ce changement (donc avec l'ancien AppId hérité de
+  MaliStock), ce nouveau Setup.exe ne la détectera PAS comme une
+  mise à jour — Windows les traite comme deux applications
+  différentes. Désinstaller manuellement toute installation
+  MaliPneus antérieure (Panneau de configuration > Programmes) avant
+  d'installer cette version, pour éviter deux entrées séparées dans
+  la liste des programmes installés.
+
+  Ceci ne se reproduira plus pour les prochaines mises à jour : à
+  partir de maintenant, l'AppId reste fixe.
   ============================================================ }

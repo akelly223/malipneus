@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:collection/collection.dart';
 import '../local/database.dart';
 import '../../domain/entities/commercial_document.dart';
 import '../../domain/entities/document_type.dart';
@@ -6,10 +7,10 @@ import '../../domain/entities/document_input.dart';
 import '../../domain/repositories/commercial_document_repository.dart';
 import '../../domain/exceptions/document_verrouille_exception.dart';
 import '../../domain/exceptions/stock_insuffisant_exception.dart';
-import '../../core/constants/db_constants.dart';
 import '../../core/services/tva_calculation_service.dart';
 import '../../core/services/stock_impact_service.dart';
 import '../../core/services/document_transformation_service.dart';
+import '../../core/services/stock_lot_service.dart';
 
 class CommercialDocumentRepositoryImpl
     implements CommercialDocumentRepository {
@@ -17,9 +18,11 @@ class CommercialDocumentRepositoryImpl
   final _tva = const TVACalculationService();
   final _transformRules = const DocumentTransformationService();
   late final StockImpactService _stock;
+  late final StockLotService _lots;
 
   CommercialDocumentRepositoryImpl(this._db) {
     _stock = StockImpactService(_db);
+    _lots = StockLotService(_db);
   }
 
   // ── Mapping Drift → Entity ────────────────────────────────────────────────
@@ -39,6 +42,9 @@ class CommercialDocumentRepositoryImpl
         totalTtc: l.totalTtc,
         position: l.position,
         notesLigne: l.notesLigne,
+        commissionUnitaire: l.commissionUnitaire,
+        commissionMontant: l.commissionMontant,
+        commissionSettlementId: l.commissionSettlementId,
       );
 
   DocumentPaiementEntity _toPaiementEntity(DocumentPayment p) =>
@@ -69,6 +75,13 @@ class CommercialDocumentRepositoryImpl
     }
     final store = await _db.storesDao.getStoreById(doc.storeId);
 
+    String? vendeurNom;
+    if (doc.vendeurEmployeeId != null) {
+      final vendeur =
+          await _db.personnelDao.getEmployeeById(doc.vendeurEmployeeId!);
+      if (vendeur != null) vendeurNom = '${vendeur.prenom} ${vendeur.nom}';
+    }
+
     return DocumentEntity(
       id: doc.id,
       numero: doc.numero,
@@ -98,6 +111,8 @@ class CommercialDocumentRepositoryImpl
       conditionsReglement: doc.conditionsReglement,
       lignes: ligneRows.map(_toLigneEntity).toList(),
       paiements: paiementRows.map(_toPaiementEntity).toList(),
+      vendeurEmployeeId: doc.vendeurEmployeeId,
+      vendeurNom: vendeurNom,
     );
   }
 
@@ -326,6 +341,7 @@ class CommercialDocumentRepositoryImpl
           notes: Value(input.notes),
           referenceExterne: Value(input.referenceExterne),
           conditionsReglement: Value(input.conditionsReglement),
+          vendeurEmployeeId: Value(input.vendeurEmployeeId),
         ),
         input.lignes
             .asMap()
@@ -360,18 +376,26 @@ class CommercialDocumentRepositoryImpl
         userNom: userNom,
       );
 
+      // Lignes réellement insérées (avec id), dans le même ordre que
+      // input.lignes (position 0..n) — utilisées pour ancrer la
+      // consommation FIFO et la commission commerciale sur la bonne ligne.
+      final lignesInserees =
+          await _db.commercialDocumentsDao.getLignesDuDocument(docId);
+
       // Décrémente le stock immédiatement : une vente comptoir directe n'a
       // pas de Bon de Livraison en amont. Si ce document provient d'une
       // transformation (parentDocumentId non nul), le stock a déjà été
       // décrémenté par le document source — pas de double décrément.
       if (input.parentDocumentId == null) {
-        for (final ligne in input.lignes) {
+        for (var i = 0; i < input.lignes.length; i++) {
+          final ligne = input.lignes[i];
           await _db.articlesDao.adjustStock(
             articleId: ligne.articleId,
             storeId: input.storeId,
             delta: -ligne.quantite,
           );
-          await _db.stockDao.createMovement(StockMovementsCompanion.insert(
+          final movementId =
+              await _db.stockDao.createMovement(StockMovementsCompanion.insert(
             articleId: ligne.articleId,
             storeId: input.storeId,
             typeMouvement: 'sortie',
@@ -379,59 +403,64 @@ class CommercialDocumentRepositoryImpl
             reference: Value(numero),
             userId: userId,
           ));
+          await _lots.consommerFifo(
+            articleId: ligne.articleId,
+            storeId: input.storeId,
+            quantite: ligne.quantite,
+            movementId: movementId,
+            documentLineId:
+                i < lignesInserees.length ? lignesInserees[i].id : null,
+          );
         }
       }
 
-      // Dépôt-vente : pour chaque ligne vendue dont l'article appartient
-      // à un auteur en dépôt, génère un achat fournisseur "fantôme" non
-      // payé représentant la part due à l'auteur. Contrairement à un
-      // achat normal, on insère directement via le DAO (pas de mouvement
-      // de stock ni de mise à jour de prix_achat : le stock a déjà été
-      // mouvementé par la vente ci-dessus). Basé sur le total HT de la
-      // ligne : la TVA est un impôt collecté pour l'État, pas une recette
-      // à partager avec l'auteur.
-      for (final ligne in input.lignes) {
-        final article = await _db.articlesDao.getArticleById(ligne.articleId);
-        if (article?.supplierId == null) continue;
-        final supplier =
-            await _db.suppliersDao.getSupplierById(article!.supplierId!);
-        if (supplier == null || !supplier.estDepot) continue;
-        if (supplier.partAuteurPct <= 0) continue;
+      // Commission commerciale : si un vendeur est attribué à cette vente,
+      // calcule et snapshotte la commission de chaque ligne à partir de sa
+      // configuration (ou d'une règle spécifique à l'article/la catégorie,
+      // prioritaire). Purement interne — jamais lu par le chemin
+      // d'impression de facture (voir PrintableDocument). Snapshot figé au
+      // moment de la vente, même logique que taux_tva sur document_lines :
+      // une modification ultérieure de la configuration du commercial
+      // n'affecte pas les ventes déjà enregistrées.
+      if (input.vendeurEmployeeId != null) {
+        final config = await _db.commissionsDao
+            .getConfigForEmployee(input.vendeurEmployeeId!);
+        if (config != null) {
+          final overrides = await _db.commissionsDao
+              .getOverridesForEmployee(input.vendeurEmployeeId!);
+          final lignesInserees =
+              await _db.commercialDocumentsDao.getLignesDuDocument(docId);
 
-        final totalLigneHt = _tva
-            .calculerLigne(
-              quantite: ligne.quantite,
-              prixUnitaireHt: ligne.prixUnitaireHt,
-              tauxTva: ligne.tauxTva,
-              remiseLignePct: ligne.remiseLignePct,
-            )
-            .totalHt;
-        final montantDu = totalLigneHt * supplier.partAuteurPct / 100;
-        if (montantDu <= 0) continue;
+          for (final ligneInseree in lignesInserees) {
+            final article =
+                await _db.articlesDao.getArticleById(ligneInseree.articleId);
 
-        final numeroDepot =
-            await _db.documentCountersDao.genererProchainNumero('DEP');
-        await _db.purchasesDao.createPurchaseWithItems(
-          PurchasesCompanion.insert(
-            numero: numeroDepot,
-            supplierId: supplier.id,
-            storeId: input.storeId,
-            userId: userId,
-            totalHt: Value(montantDu),
-            totalFinal: Value(montantDu),
-            montantPaye: const Value(0),
-            statutPaiement: const Value(DbConstants.invoiceStatusNonPaye),
-          ),
-          [
-            PurchaseItemsCompanion.insert(
-              purchaseId: 0,
-              articleId: ligne.articleId,
-              quantite: ligne.quantite,
-              prixAchatUnitaire: montantDu / ligne.quantite,
-              totalLigne: montantDu,
-            ),
-          ],
-        );
+            final override = overrides.firstWhereOrNull((o) =>
+                o.articleId == ligneInseree.articleId ||
+                (o.categorieId != null &&
+                    article?.categorieId == o.categorieId));
+
+            final typeCommission = override?.typeCommission ?? config.typeCommission;
+            final montantFixe =
+                override?.montantFixe ?? config.montantFixeParPneu ?? 0;
+            final pourcentage = override?.pourcentage ?? config.pourcentage ?? 0;
+
+            final commissionUnitaire =
+                typeCommission == 'fixe' ? montantFixe : null;
+            final commissionMontant = typeCommission == 'fixe'
+                ? montantFixe * ligneInseree.quantite
+                : ligneInseree.totalHt * pourcentage / 100;
+
+            if (commissionMontant <= 0) continue;
+
+            await (_db.update(_db.documentLines)
+                  ..where((l) => l.id.equals(ligneInseree.id)))
+                .write(DocumentLinesCompanion(
+              commissionUnitaire: Value(commissionUnitaire),
+              commissionMontant: Value(commissionMontant),
+            ));
+          }
+        }
       }
 
       // Enregistre le paiement initial (s'il y en a un) puis calcule le

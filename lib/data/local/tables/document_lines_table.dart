@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'articles_table.dart';
+import 'commission_settlements_table.dart';
 
 /// Lignes d'une pièce commerciale (modèle Sage LIGNEPIECE).
 ///
@@ -38,4 +39,19 @@ class DocumentLines extends Table {
   IntColumn get position => integer().withDefault(const Constant(0))();
 
   TextColumn get notesLigne => text().nullable()();
+
+  // ── Commission commerciale (interne — jamais imprimée sur facture) ───
+  //
+  // Snapshot figé au moment de la vente à partir de la configuration du
+  // vendeur ([CommissionConfigs]), même logique que [tauxTva] ci-dessus :
+  // une modification ultérieure de la config du commercial n'affecte pas
+  // les ventes déjà enregistrées.
+
+  RealColumn get commissionUnitaire => real().nullable()();
+  RealColumn get commissionMontant => real().nullable()();
+
+  /// Renseigné une seule fois, au règlement de la commission — empêche
+  /// tout double paiement par construction (voir [CommissionSettlements]).
+  IntColumn get commissionSettlementId =>
+      integer().nullable().references(CommissionSettlements, #id)();
 }

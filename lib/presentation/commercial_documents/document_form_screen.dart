@@ -17,6 +17,7 @@ import '../../domain/entities/article.dart';
 import '../../domain/entities/document_type.dart';
 import '../../domain/entities/document_input.dart';
 import '../articles/providers/article_provider.dart';
+import '../commissions/providers/commissions_provider.dart';
 import 'providers/commercial_document_providers.dart';
 import 'providers/document_form_notifier.dart';
 
@@ -302,6 +303,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
             ),
             if (formState.estVenteComptoirDirecte) ...[
               const SizedBox(height: 24),
+              _CommercialSelector(
+                vendeurEmployeeId: formState.vendeurEmployeeId,
+                onChanged: notifier.setVendeur,
+              ),
+              const SizedBox(height: 24),
               SalePaymentSection(
                 totalTtc: formState.totalTtc,
                 clientSelectionne: formState.clientId != null,
@@ -343,6 +349,46 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Sélection libre du commercial à qui attribuer la commission de cette
+/// vente — indépendante de l'utilisateur connecté. N'affiche rien si
+/// aucun employé n'est configuré comme commercial.
+class _CommercialSelector extends ConsumerWidget {
+  final int? vendeurEmployeeId;
+  final ValueChanged<int?> onChanged;
+
+  const _CommercialSelector({
+    required this.vendeurEmployeeId,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final commerciauxAsync = ref.watch(commercialEmployeesProvider);
+
+    return commerciauxAsync.when(
+      data: (commerciaux) {
+        if (commerciaux.isEmpty) return const SizedBox.shrink();
+        return DropdownButtonFormField<int?>(
+          initialValue: vendeurEmployeeId,
+          decoration: const InputDecoration(
+            labelText: 'Commercial (optionnel)',
+            helperText:
+                'Attribue la commission de cette vente à un commercial.',
+          ),
+          items: [
+            const DropdownMenuItem<int?>(value: null, child: Text('Aucun')),
+            ...commerciaux.map(
+                (e) => DropdownMenuItem(value: e.id, child: Text(e.nomComplet))),
+          ],
+          onChanged: onChanged,
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

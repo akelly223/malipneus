@@ -1,4 +1,4 @@
-# Procédure de build — Gestion Commerciale Mali (StockMali)
+# Procédure de build — MaliPneus
 
 Cette procédure part du principe que l'application fonctionne déjà
 en mode développement chez toi (`flutter run -d windows` réussit).
@@ -63,12 +63,9 @@ Dans le dossier `installer\` du projet (déjà fourni) :
 
 - `setup.iss` — le script Inno Setup, déjà rédigé
 - `LICENSE.txt` — le texte de licence affiché à l'installation, déjà rédigé
-- `app_icon.ico` — **à fournir toi-même** : une icône au format `.ico`
-  (pas `.png`) pour représenter l'application dans le Setup et les
-  raccourcis. Si tu n'en as pas, des convertisseurs PNG→ICO gratuits
-  existent en ligne (ex: convertio.co/png-ico), ou tu peux temporairement
-  retirer la ligne `SetupIconFile=app_icon.ico` du script pour utiliser
-  l'icône par défaut d'Inno Setup en attendant.
+- `app_icon.ico` — icône de l'application au format `.ico` (logo
+  MaliPneus, déjà fourni, multi-résolutions 16 à 256px), utilisée pour
+  le Setup et les raccourcis.
 
 Vérifie aussi la ligne suivante dans `setup.iss` :
 
@@ -88,7 +85,7 @@ le script), ajuste ce chemin.
 3. Si tout se passe bien, tu obtiens :
 
 ```
-dist\StockMali_Setup.exe
+dist\MaliPneus_Setup.exe
 ```
 
 C'est ce fichier unique que tu donnes au commerçant — plus besoin de
@@ -109,7 +106,7 @@ lui transmettre le dossier `Release` complet.
 (idéalement une machine "propre", sans le projet de développement
 installé, pour simuler la machine du commerçant) :
 
-1. Lance `StockMali_Setup.exe`
+1. Lance `MaliPneus_Setup.exe`
 2. Vérifie l'installation complète (voir checklist de déploiement
    ci-dessous)
 3. Lance l'application depuis le raccourci créé

@@ -6,6 +6,8 @@ part of 'articles_dao.dart';
 mixin _$ArticlesDaoMixin on DatabaseAccessor<AppDatabase> {
   $CategoriesTable get categories => attachedDatabase.categories;
   $SuppliersTable get suppliers => attachedDatabase.suppliers;
+  $UsersTable get users => attachedDatabase.users;
+  $LoadingsTable get loadings => attachedDatabase.loadings;
   $ArticlesTable get articles => attachedDatabase.articles;
   $StoresTable get stores => attachedDatabase.stores;
   $ArticleStocksTable get articleStocks => attachedDatabase.articleStocks;

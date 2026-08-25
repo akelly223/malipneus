@@ -22,7 +22,7 @@ class AppSettings extends Table {
   TextColumn get email => text().nullable()();
 
   /// Courte phrase d'activité affichée sous le nom du commerce sur
-  /// la facture imprimée, ex: "Livres - Formations - Informatique".
+  /// la facture imprimée, ex: "Pneus neufs et occasion - Vente et pose".
   TextColumn get slogan => text().nullable()();
 
   TextColumn get commentairePiedDePage => text().withDefault(const Constant(

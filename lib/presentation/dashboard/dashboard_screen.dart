@@ -70,6 +70,10 @@ class DashboardScreen extends ConsumerWidget {
               ClientsFournisseursStatsSection(stats: stats),
               const SizedBox(height: 24),
 
+              // ── Section 5bis : Personnel & Chargements (vision 360°) ──────
+              PersonnelChargementsStatsSection(stats: stats),
+              const SizedBox(height: 24),
+
               // ── Section 6 : Documents V2 en attente (pipeline) ────────────
               _SectionV2(stats: stats),
               const SizedBox(height: 24),

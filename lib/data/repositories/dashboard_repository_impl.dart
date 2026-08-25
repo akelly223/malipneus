@@ -105,6 +105,39 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
     final achatsPeriode = await _achatsEtCompte(debutPeriode, finPeriode);
 
+    // ── Personnel / Chargements : dépenses, salaires, commissions, pertes ──
+
+    final depensesPeriode = await _sommeSimple(
+      'SELECT COALESCE(SUM(montant), 0.0) AS t FROM expenses WHERE date >= ? AND date < ?',
+      debutPeriode,
+      finPeriode,
+    );
+    final salairesPayesPeriode = await _sommeSimple(
+      '''
+      SELECT COALESCE(SUM(montant), 0.0) AS t FROM payslip_payments
+      WHERE date_paiement >= ? AND date_paiement < ?
+      ''',
+      debutPeriode,
+      finPeriode,
+    );
+    final commissionsCommercialesPeriode = await _sommeSimple(
+      '''
+      SELECT COALESCE(SUM(montant_commission), 0.0) AS t FROM commission_settlements
+      WHERE date_paiement >= ? AND date_paiement < ?
+      ''',
+      debutPeriode,
+      finPeriode,
+    );
+    final pertesPeriode = await _sommeSimple(
+      '''
+      SELECT COALESCE(SUM(quantite), 0.0) AS t FROM stock_movements
+      WHERE type_mouvement IN ('perte', 'casse')
+        AND date_mouvement >= ? AND date_mouvement < ?
+      ''',
+      debutPeriode,
+      finPeriode,
+    );
+
     // ── Documents : comptages pour la période sélectionnée ──────────────────
 
     final nombreDevisPeriode = await _compterSimple(
@@ -377,6 +410,10 @@ class DashboardRepositoryImpl implements DashboardRepository {
       nombreProformasBrouillon: proformasBrouillon,
       nombreBCEnAttente: bcEnAttente,
       conseils: conseils,
+      depensesPeriode: depensesPeriode,
+      salairesPayesPeriode: salairesPayesPeriode,
+      commissionsCommercialesPeriode: commissionsCommercialesPeriode,
+      pertesPeriode: pertesPeriode,
     );
   }
 
@@ -487,6 +524,21 @@ class DashboardRepositoryImpl implements DashboardRepository {
         ],
       ).getSingle();
       return (row.data['marge'] as num?)?.toDouble() ?? 0.0;
+    } catch (_) {
+      return 0.0;
+    }
+  }
+
+  Future<double> _sommeSimple(String sql, DateTime? debut, DateTime? fin) async {
+    try {
+      final row = await db.customSelect(
+        sql,
+        variables: [
+          if (debut != null) Variable.withInt(_epochSecondes(debut)),
+          if (fin != null) Variable.withInt(_epochSecondes(fin)),
+        ],
+      ).getSingle();
+      return (row.data['t'] as num?)?.toDouble() ?? 0.0;
     } catch (_) {
       return 0.0;
     }

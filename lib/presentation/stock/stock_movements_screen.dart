@@ -134,12 +134,10 @@ class StockMovementsScreen extends ConsumerWidget {
   }
 
   /// Entrée/sortie/perte/casse manuelle, sans passer par un achat ni
-  /// une vente — utile notamment pour réceptionner plusieurs livres en
-  /// dépôt-vente d'un coup (aucune dette ne doit être créée à la
-  /// réception) ou pour reprendre des invendus non encore vendus (la
-  /// dette éventuelle n'existant que sur les exemplaires déjà vendus,
-  /// une simple sortie de stock suffit). Contrairement à un champ
-  /// article unique, chaque
+  /// une vente — utile notamment pour réceptionner un lot d'articles
+  /// d'un coup (aucune dette ne doit être créée à la réception) ou
+  /// pour ajuster le stock (perte, casse, retour fournisseur).
+  /// Contrairement à un champ article unique, chaque
   /// sélection dans l'autocomplétion AJOUTE une ligne à une liste :
   /// sans ça, sélectionner un article videait juste le champ sans
   /// aucun retour visuel, donnant l'impression que le clic ne
@@ -257,11 +255,12 @@ class StockMovementsScreen extends ConsumerWidget {
                   items: const [
                     DropdownMenuItem(
                         value: DbConstants.movementEntree,
-                        child: Text('Entrée (réception, dépôt-vente...)')),
+                        child:
+                            Text('Entrée (réception fournisseur, ajustement...)')),
                     DropdownMenuItem(
                         value: DbConstants.movementSortie,
                         child: Text(
-                            'Sortie (retour au fournisseur/auteur, don...)')),
+                            'Sortie (retour fournisseur, don, ajustement...)')),
                     DropdownMenuItem(
                         value: DbConstants.movementPerte,
                         child: Text('Perte')),
@@ -275,7 +274,7 @@ class StockMovementsScreen extends ConsumerWidget {
                 AppTextField(
                   label: 'Référence (optionnel)',
                   controller: referenceController,
-                  hint: 'Ex: nom de l\'auteur',
+                  hint: 'Ex: nom du fournisseur, n° bon de livraison',
                 ),
                 if (type == DbConstants.movementEntree ||
                     type == DbConstants.movementSortie)
@@ -283,8 +282,8 @@ class StockMovementsScreen extends ConsumerWidget {
                     contentPadding: EdgeInsets.zero,
                     controlAffinity: ListTileControlAffinity.leading,
                     title: Text(type == DbConstants.movementEntree
-                        ? 'Imprimer un reçu de réception (à remettre à l\'auteur/fournisseur)'
-                        : 'Imprimer un bon de sortie (à remettre à l\'auteur/fournisseur)'),
+                        ? 'Imprimer un reçu de réception (à remettre au fournisseur)'
+                        : 'Imprimer un bon de sortie (à remettre au fournisseur)'),
                     value: imprimerRecu,
                     onChanged: (v) =>
                         setStateDialog(() => imprimerRecu = v ?? false),
@@ -466,7 +465,7 @@ class StockMovementsScreen extends ConsumerWidget {
   /// Regroupe les mouvements partageant un même [groupeId] (un même
   /// lot saisi en une fois depuis "Mouvement manuel") pour les
   /// afficher comme une seule entrée d'historique au lieu d'une ligne
-  /// par article — sinon un lot de 10 livres produirait 10 lignes
+  /// par article — sinon un lot de 10 articles produirait 10 lignes
   /// identiques dans la liste, illisible et sans lien entre elles.
   List<_MouvementAffichage> _agencerAffichage(
       List<StockMovementEntity> movements) {
@@ -664,7 +663,7 @@ class _MouvementAffichage {
 
 /// Une ligne du dialogue "Mouvement de stock manuel" : un article
 /// avec sa propre quantité, pour permettre d'en saisir plusieurs
-/// d'un coup (ex : réception d'un lot de livres en dépôt-vente).
+/// d'un coup (ex : réception d'un lot d'articles chez un fournisseur).
 class _LigneMouvementManuel {
   final ArticleEntity article;
   final TextEditingController quantiteController;

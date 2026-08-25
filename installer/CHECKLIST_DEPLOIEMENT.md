@@ -16,7 +16,7 @@ réel, pas seulement la première fois.
 - [ ] Testé la connexion avec un compte employé (si le commerçant
       prévoit d'avoir des vendeurs) : vérifié qu'il ne voit que
       Dashboard/Articles/Clients/Factures/Devis, sans prix d'achat
-- [ ] `StockMali_Setup.exe` généré et testé sur une machine Windows
+- [ ] `MaliPneus_Setup.exe` généré et testé sur une machine Windows
       "propre" (pas celle de développement)
 - [ ] Numéro de version (`MyAppVersion` dans `setup.iss`) à jour et
       noté quelque part pour le suivi
@@ -26,7 +26,7 @@ réel, pas seulement la première fois.
 - [ ] Vérifier la configuration Windows minimale : Windows 10 ou 11,
       64 bits (`ArchitecturesAllowed=x64compatible` dans le script —
       ne fonctionnera pas sur un Windows 32 bits ancien)
-- [ ] Lancer `StockMali_Setup.exe`, vérifier que l'installation se
+- [ ] Lancer `MaliPneus_Setup.exe`, vérifier que l'installation se
       termine sans erreur et que les raccourcis Bureau + Menu
       Démarrer sont bien créés
 - [ ] Lancer l'application depuis le raccourci Bureau (pas depuis

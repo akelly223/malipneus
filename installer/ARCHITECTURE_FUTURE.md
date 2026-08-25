@@ -8,7 +8,7 @@ ou l'autre, pour éviter de redécouvrir ces contraintes à zéro.
 ## Mise à jour automatique
 
 Rien n'est implémenté actuellement — chaque mise à jour nécessite de
-réinstaller manuellement le nouveau `StockMali_Setup.exe` par-dessus
+réinstaller manuellement le nouveau `MaliPneus_Setup.exe` par-dessus
 l'ancien (sans perte de données, voir note dans `setup.iss`).
 
 Pour une vraie mise à jour automatique, deux approches possibles :

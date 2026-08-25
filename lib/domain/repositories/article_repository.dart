@@ -30,8 +30,17 @@ abstract class ArticleRepository {
     required double prixAchat,
     required double prixVente,
     required double stockMinimum,
-    int? supplierId,
     String? description,
+    String? marque,
+    String? dimension,
+    double? largeur,
+    double? hauteur,
+    double? diametre,
+    String? type,
+    String? saison,
+    String etat = 'neuf',
+    double? poids,
+    int? chargementOrigineId,
   });
   Future<void> updateArticle(ArticleEntity article);
 

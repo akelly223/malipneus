@@ -1,17 +1,19 @@
 import 'package:drift/drift.dart';
 import '../local/database.dart';
-import '../local/tables/purchases_table.dart';
-import '../local/tables/payments_table.dart';
-import '../local/tables/stock_movements_table.dart';
 import '../../domain/entities/purchase.dart';
 import '../../domain/entities/purchase_cart_item_input.dart';
 import '../../domain/repositories/purchase_repository.dart';
 import '../../core/constants/db_constants.dart';
+import '../../core/services/stock_lot_service.dart';
+import '../../core/services/loading_cost_allocation_service.dart';
 
 class PurchaseRepositoryImpl implements PurchaseRepository {
   final AppDatabase db;
+  late final StockLotService _lots;
 
-  PurchaseRepositoryImpl(this.db);
+  PurchaseRepositoryImpl(this.db) {
+    _lots = StockLotService(db);
+  }
 
   double _calculerTotal(
       List<PurchaseCartItemInput> items, double remiseGlobale) {
@@ -41,6 +43,9 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     final modifiePar = purchase.modifieParUserId != null
         ? await db.usersDao.getUserById(purchase.modifieParUserId!)
         : null;
+    final chargement = purchase.chargementId != null
+        ? await db.loadingsDao.getLoadingById(purchase.chargementId!)
+        : null;
 
     return PurchaseEntity(
       id: purchase.id,
@@ -63,6 +68,8 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       dateModification: purchase.dateModification,
       modifieParNom: modifiePar?.nom,
       items: items,
+      chargementId: purchase.chargementId,
+      chargementNumero: chargement?.numero,
     );
   }
 
@@ -117,6 +124,8 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     double montantPayeInitial = 0,
     String? modePaiementInitial,
     String statut = 'recu',
+    int? chargementId,
+    DateTime? dateAchat,
   }) async {
     return db.transaction(() async {
       final numero = await db.purchasesDao.generateNextNumero();
@@ -132,18 +141,21 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         statutPaiement = DbConstants.invoiceStatusNonPaye;
       }
 
-      final purchaseId = await db.purchasesDao.createPurchaseWithItems(
+      final (purchaseId, itemIds) = await db.purchasesDao.createPurchaseWithItems(
         PurchasesCompanion.insert(
           numero: numero,
           supplierId: supplierId,
           storeId: storeId,
           userId: userId,
+          dateCreation:
+              dateAchat != null ? Value(dateAchat) : const Value.absent(),
           totalHt: Value(sousTotal),
           remiseGlobale: Value(remiseGlobale),
           totalFinal: Value(totalFinal),
           montantPaye: Value(montantPayeInitial),
           statutPaiement: Value(statutPaiement),
           statut: Value(statut),
+          chargementId: Value(chargementId),
         ),
         items
             .map((i) => PurchaseItemsCompanion.insert(
@@ -161,7 +173,8 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       if (statut == DbConstants.purchaseStatutRecu) {
         // Augmente le stock, trace chaque entrée, et met à jour le prix
         // d'achat de référence de l'article.
-        for (final item in items) {
+        for (var i = 0; i < items.length; i++) {
+          final item = items[i];
           await db.articlesDao.adjustStock(
             articleId: item.articleId,
             storeId: storeId,
@@ -180,6 +193,25 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
             'UPDATE articles SET prix_achat = ? WHERE id = ?',
             [item.prixAchatUnitaire, item.articleId],
           );
+          if (chargementId != null) {
+            await db.customStatement(
+              'UPDATE articles SET chargement_origine_id = ? WHERE id = ?',
+              [chargementId, item.articleId],
+            );
+          }
+
+          await _lots.enregistrerEntree(
+            articleId: item.articleId,
+            storeId: storeId,
+            quantite: item.quantite,
+            coutUnitaire: item.prixAchatUnitaire,
+            loadingId: chargementId,
+            purchaseId: purchaseId,
+            purchaseItemId: itemIds[i],
+          );
+        }
+        if (chargementId != null) {
+          await LoadingCostAllocationService(db).recalculer(chargementId);
         }
       }
 
@@ -234,10 +266,28 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           'UPDATE articles SET prix_achat = ? WHERE id = ?',
           [item.prixAchatUnitaire, item.articleId],
         );
+        if (purchase.chargementId != null) {
+          await db.customStatement(
+            'UPDATE articles SET chargement_origine_id = ? WHERE id = ?',
+            [purchase.chargementId, item.articleId],
+          );
+        }
+        await _lots.enregistrerEntree(
+          articleId: item.articleId,
+          storeId: purchase.storeId,
+          quantite: item.quantite,
+          coutUnitaire: item.prixAchatUnitaire,
+          loadingId: purchase.chargementId,
+          purchaseId: purchaseId,
+          purchaseItemId: item.id,
+        );
       }
 
       await db.purchasesDao.marquerCommeRecue(purchaseId);
     });
+    if (purchase.chargementId != null) {
+      await LoadingCostAllocationService(db).recalculer(purchase.chargementId!);
+    }
   }
 
   @override
@@ -248,6 +298,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     required int modifieParUserId,
     required List<PurchaseCartItemInput> items,
     double remiseGlobale = 0,
+    DateTime? dateAchat,
   }) async {
     final existant = await db.purchasesDao.getPurchaseById(purchaseId);
     if (existant == null) throw Exception('Achat introuvable');
@@ -280,14 +331,35 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
             reference: Value('CORRECTION-${existant.numero}'),
             userId: modifieParUserId,
           ));
+          await _lots.reduireLotsAchat(
+            purchaseId: purchaseId,
+            articleId: ancienne.articleId,
+            quantite: ancienne.quantite,
+            purchaseItemId: ancienne.id,
+          );
         }
       }
+
+      // Les anciennes lignes d'achat vont être supprimées (ÉTAPE 2) —
+      // les lots de stock qu'elles ont créés ne sont eux jamais
+      // supprimés (contrainte de clé étrangère depuis
+      // stock_lot_consumptions, et historique FIFO à préserver), mais
+      // leur purchase_item_id doit être détaché en premier pour ne pas
+      // violer la contrainte de clé étrangère lors de la suppression
+      // des lignes. Un lot ainsi détaché retombe sur la correspondance
+      // de repli (purchaseId, articleId) — sans effet ici puisque
+      // ÉTAPE 1 les a déjà réduits à 0 (entièrement remplacés par les
+      // nouvelles lignes de l'ÉTAPE 3).
+      await db.customStatement(
+        'UPDATE stock_lots SET purchase_item_id = NULL WHERE purchase_id = ?',
+        [purchaseId],
+      );
 
       // ÉTAPE 2 : Application du nouvel achat.
       final sousTotal = items.fold<double>(0, (s, i) => s + i.totalLigne);
       final totalFinal = _calculerTotal(items, remiseGlobale);
 
-      await db.purchasesDao.updatePurchaseWithItems(
+      final itemIds = await db.purchasesDao.updatePurchaseWithItems(
         purchaseId,
         PurchasesCompanion(
           supplierId: Value(supplierId),
@@ -295,6 +367,8 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           totalHt: Value(sousTotal),
           remiseGlobale: Value(remiseGlobale),
           totalFinal: Value(totalFinal),
+          dateCreation:
+              dateAchat != null ? Value(dateAchat) : const Value.absent(),
           dateModification: Value(DateTime.now()),
           modifieParUserId: Value(modifieParUserId),
         ),
@@ -313,7 +387,8 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
       // ÉTAPE 3 : Application des nouvelles entrées de stock.
       if (!impacteStock) return;
-      for (final item in items) {
+      for (var i = 0; i < items.length; i++) {
+        final item = items[i];
         await db.articlesDao.adjustStock(
           articleId: item.articleId,
           storeId: storeId,
@@ -334,8 +409,27 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           'UPDATE articles SET prix_achat = ? WHERE id = ?',
           [item.prixAchatUnitaire, item.articleId],
         );
+        if (existant.chargementId != null) {
+          await db.customStatement(
+            'UPDATE articles SET chargement_origine_id = ? WHERE id = ?',
+            [existant.chargementId, item.articleId],
+          );
+        }
+        await _lots.enregistrerEntree(
+          articleId: item.articleId,
+          storeId: storeId,
+          quantite: item.quantite,
+          coutUnitaire: item.prixAchatUnitaire,
+          purchaseItemId: itemIds[i],
+          loadingId: existant.chargementId,
+          purchaseId: purchaseId,
+        );
       }
     });
+
+    if (impacteStock && existant.chargementId != null) {
+      await LoadingCostAllocationService(db).recalculer(existant.chargementId!);
+    }
   }
 
   @override

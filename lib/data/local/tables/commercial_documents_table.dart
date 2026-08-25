@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'clients_table.dart';
 import 'stores_table.dart';
 import 'users_table.dart';
+import 'employees_table.dart';
 
 /// Table unifiée de toutes les pièces commerciales (modèle Sage PIECE).
 ///
@@ -82,4 +83,11 @@ class CommercialDocuments extends Table {
 
   /// Ex: '30 jours fin de mois', 'À réception'.
   TextColumn get conditionsReglement => text().nullable()();
+
+  /// Commercial (employé) à qui attribuer la commission de cette vente,
+  /// choisi librement dans une liste déroulante au moment de la vente —
+  /// indépendant de l'utilisateur connecté ([createdById]). Null pour
+  /// une vente comptoir sans commercial (comportement inchangé).
+  IntColumn get vendeurEmployeeId =>
+      integer().nullable().references(Employees, #id)();
 }

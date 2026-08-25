@@ -16,6 +16,11 @@ import '../../data/repositories/dashboard_repository_impl.dart';
 import '../../data/repositories/settings_repository_impl.dart';
 import '../../data/repositories/receipt_repository_impl.dart';
 import '../../data/repositories/inventory_repository_impl.dart';
+import '../../data/repositories/personnel_repository_impl.dart';
+import '../../data/repositories/payroll_repository_impl.dart';
+import '../../data/repositories/commissions_repository_impl.dart';
+import '../../data/repositories/expenses_repository_impl.dart';
+import '../../data/repositories/loadings_repository_impl.dart';
 
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/article_repository.dart';
@@ -31,6 +36,11 @@ import '../../domain/repositories/dashboard_repository.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../../domain/repositories/receipt_repository.dart';
 import '../../domain/repositories/inventory_repository.dart';
+import '../../domain/repositories/personnel_repository.dart';
+import '../../domain/repositories/payroll_repository.dart';
+import '../../domain/repositories/commissions_repository.dart';
+import '../../domain/repositories/expenses_repository.dart';
+import '../../domain/repositories/loadings_repository.dart';
 import '../../core/services/draft_service.dart';
 
 /// Instance unique de la base de données, partagée par toute
@@ -95,6 +105,26 @@ final receiptRepositoryProvider = Provider<ReceiptRepository>(
 
 final inventoryRepositoryProvider = Provider<InventoryRepository>(
   (ref) => InventoryRepositoryImpl(ref.watch(databaseProvider)),
+);
+
+final personnelRepositoryProvider = Provider<PersonnelRepository>(
+  (ref) => PersonnelRepositoryImpl(ref.watch(databaseProvider)),
+);
+
+final payrollRepositoryProvider = Provider<PayrollRepository>(
+  (ref) => PayrollRepositoryImpl(ref.watch(databaseProvider)),
+);
+
+final commissionsRepositoryProvider = Provider<CommissionsRepository>(
+  (ref) => CommissionsRepositoryImpl(ref.watch(databaseProvider)),
+);
+
+final expensesRepositoryProvider = Provider<ExpensesRepository>(
+  (ref) => ExpensesRepositoryImpl(ref.watch(databaseProvider)),
+);
+
+final loadingsRepositoryProvider = Provider<LoadingsRepository>(
+  (ref) => LoadingsRepositoryImpl(ref.watch(databaseProvider)),
 );
 
 final draftServiceProvider = Provider<DraftService>(

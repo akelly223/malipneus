@@ -164,7 +164,7 @@ class _DiagnosticBody extends StatelessWidget {
     buf.writeln();
 
     buf.writeln('--- DONNÉES ---');
-    buf.writeln('Articles             : ${_int("nbArticles")}');
+    buf.writeln('Articles                : ${_int("nbArticles")}');
     buf.writeln('Clients              : ${_int("nbClients")}');
     buf.writeln('Fournisseurs         : ${_int("nbFournisseurs")}');
     buf.writeln('Factures (classiques): ${_int("nbFacturesV1")}');

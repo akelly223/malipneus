@@ -60,6 +60,14 @@ class CommercialDocumentsDao extends DatabaseAccessor<AppDatabase>
             ..orderBy([(l) => OrderingTerm.asc(l.position)]))
           .get();
 
+  /// Lignes de document par identifiants, utilisé pour la rentabilité
+  /// par chargement (retrouver le CA/la commission des ventes qui ont
+  /// consommé les lots d'un chargement donné).
+  Future<List<DocumentLine>> getLignesParIds(List<int> ids) {
+    if (ids.isEmpty) return Future.value(const []);
+    return (select(documentLines)..where((l) => l.id.isIn(ids))).get();
+  }
+
   Future<List<DocumentPayment>> getPaiementsDuDocument(int documentId) =>
       (select(documentPayments)
             ..where((p) => p.documentId.equals(documentId))

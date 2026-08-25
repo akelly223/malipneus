@@ -30,6 +30,12 @@ class DocumentLigneEntity {
   final int position;
   final String? notesLigne;
 
+  /// Commission commerciale (interne — jamais affichée sur la facture
+  /// client, voir [PrintableDocument] qui n'expose pas ce champ).
+  final double? commissionUnitaire;
+  final double? commissionMontant;
+  final int? commissionSettlementId;
+
   const DocumentLigneEntity({
     required this.id,
     required this.documentId,
@@ -45,6 +51,9 @@ class DocumentLigneEntity {
     required this.totalTtc,
     required this.position,
     this.notesLigne,
+    this.commissionUnitaire,
+    this.commissionMontant,
+    this.commissionSettlementId,
   });
 }
 
@@ -126,6 +135,10 @@ class DocumentEntity {
   final List<DocumentLigneEntity> lignes;
   final List<DocumentPaiementEntity> paiements;
 
+  /// Commercial (employé) attribué à cette vente — interne uniquement.
+  final int? vendeurEmployeeId;
+  final String? vendeurNom;
+
   const DocumentEntity({
     required this.id,
     required this.numero,
@@ -155,6 +168,8 @@ class DocumentEntity {
     this.conditionsReglement,
     this.lignes = const [],
     this.paiements = const [],
+    this.vendeurEmployeeId,
+    this.vendeurNom,
   });
 
   double get resteAPayer => totalTtc - montantPaye;

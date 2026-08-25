@@ -14,9 +14,9 @@ typedef StockReceiptLigne = ({String code, String nom, double quantite});
 
 /// Génère le reçu papier d'un mouvement de stock manuel (entrée ou
 /// sortie) — volontairement indépendant de tout achat ou facture :
-/// sert de preuve remise à un fournisseur/auteur lors d'une réception
-/// ou d'une reprise de dépôt-vente, sans jamais créer de dette ni de
-/// document comptable.
+/// sert de preuve remise à un fournisseur lors d'une réception ou
+/// d'un retour de pneus, sans jamais créer de dette ni de document
+/// comptable.
 class StockEntryReceiptPdfService {
   StockEntryReceiptPdfService._();
 
@@ -170,7 +170,7 @@ class StockEntryReceiptPdfService {
             pw.Text(
                 estSortie
                     ? 'Retour fournisseur / sortie manuelle'
-                    : 'Dépôt-vente / entrée manuelle',
+                    : 'Réception fournisseur / entrée manuelle',
                 style: pw.TextStyle(fontSize: 9, color: _couleurTexteSecondaire)),
           ],
         ),
@@ -191,7 +191,7 @@ class StockEntryReceiptPdfService {
                 style:
                     pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
             if (reference != null && reference.isNotEmpty)
-              pw.Text('Auteur / Fournisseur : $reference',
+              pw.Text('Fournisseur / Référence : $reference',
                   style: const pw.TextStyle(fontSize: 10)),
           ],
         ),

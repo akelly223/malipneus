@@ -22,6 +22,17 @@ class StockDao extends DatabaseAccessor<AppDatabase> with _$StockDaoMixin {
   Future<int> createMovement(StockMovementsCompanion movement) =>
       into(stockMovements).insert(movement);
 
+  /// Types de mouvement pour un lot d'identifiants, utilisé pour
+  /// classifier les consommations de lots (vente/perte/ajustement) sans
+  /// une requête par ligne (voir LoadingsRepositoryImpl.getRentabilite).
+  Future<Map<int, String>> getTypesPourMouvements(List<int> ids) async {
+    if (ids.isEmpty) return {};
+    final rows = await (select(stockMovements)
+          ..where((m) => m.id.isIn(ids)))
+        .get();
+    return {for (final r in rows) r.id: r.typeMouvement};
+  }
+
   Future<List<StockTransfer>> getAllTransfers() => (select(stockTransfers)
         ..orderBy([(t) => OrderingTerm.desc(t.dateTransfert)]))
       .get();

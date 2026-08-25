@@ -60,6 +60,10 @@ class DocumentFormState {
   final double? montantPayeSaisi;
   final String modePaiementInitial;
 
+  /// Commercial (employé) à qui attribuer la commission de cette vente —
+  /// uniquement pertinent pour une vente comptoir directe.
+  final int? vendeurEmployeeId;
+
   const DocumentFormState({
     required this.type,
     this.editDocumentId,
@@ -79,6 +83,7 @@ class DocumentFormState {
     this.documentCreeeId,
     this.montantPayeSaisi,
     this.modePaiementInitial = 'especes',
+    this.vendeurEmployeeId,
   });
 
   /// Vrai pour une vente comptoir créée directement (pas via la chaîne
@@ -129,6 +134,8 @@ class DocumentFormState {
     int? documentCreeeId,
     double? montantPayeSaisi,
     String? modePaiementInitial,
+    int? vendeurEmployeeId,
+    bool clearVendeur = false,
   }) =>
       DocumentFormState(
         type: type,
@@ -151,6 +158,9 @@ class DocumentFormState {
         montantPayeSaisi: montantPayeSaisi ?? this.montantPayeSaisi,
         modePaiementInitial:
             modePaiementInitial ?? this.modePaiementInitial,
+        vendeurEmployeeId: clearVendeur
+            ? null
+            : (vendeurEmployeeId ?? this.vendeurEmployeeId),
       );
 }
 
@@ -204,6 +214,14 @@ class DocumentFormNotifier extends StateNotifier<DocumentFormState> {
 
   void setModePaiement(String mode) =>
       state = state.copyWith(modePaiementInitial: mode);
+
+  void setVendeur(int? employeeId) {
+    if (employeeId == null) {
+      state = state.copyWith(clearVendeur: true);
+    } else {
+      state = state.copyWith(vendeurEmployeeId: employeeId);
+    }
+  }
 
   // ── Gestion des lignes ────────────────────────────────────────────────────
 
@@ -301,6 +319,7 @@ class DocumentFormNotifier extends StateNotifier<DocumentFormState> {
         conditionsReglement: state.conditionsReglement,
         createdById: session?.id,
         createdByNom: session?.nom,
+        vendeurEmployeeId: state.vendeurEmployeeId,
       );
 
       if (state.estVenteComptoirDirecte) {

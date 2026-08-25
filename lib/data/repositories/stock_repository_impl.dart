@@ -5,11 +5,15 @@ import '../local/tables/stock_transfers_table.dart';
 import '../../domain/entities/stock_movement.dart';
 import '../../domain/repositories/stock_repository.dart';
 import '../../core/constants/db_constants.dart';
+import '../../core/services/stock_lot_service.dart';
 
 class StockRepositoryImpl implements StockRepository {
   final AppDatabase db;
+  late final StockLotService _lots;
 
-  StockRepositoryImpl(this.db);
+  StockRepositoryImpl(this.db) {
+    _lots = StockLotService(db);
+  }
 
   Future<StockMovementEntity> _toEntity(StockMovement m) async {
     final article = await db.articlesDao.getArticleById(m.articleId);
@@ -62,7 +66,8 @@ class StockRepositoryImpl implements StockRepository {
     String? groupeId,
   }) async {
     await db.transaction(() async {
-      await db.stockDao.createMovement(StockMovementsCompanion.insert(
+      final movementId =
+          await db.stockDao.createMovement(StockMovementsCompanion.insert(
         articleId: articleId,
         storeId: storeId,
         typeMouvement: typeMouvement,
@@ -74,14 +79,31 @@ class StockRepositoryImpl implements StockRepository {
 
       // Une entrée augmente le stock, tout le reste (sortie, perte,
       // casse) le diminue.
-      final delta = typeMouvement == DbConstants.movementEntree
-          ? quantite
-          : -quantite;
+      final estEntree = typeMouvement == DbConstants.movementEntree;
+      final delta = estEntree ? quantite : -quantite;
       await db.articlesDao.adjustStock(
         articleId: articleId,
         storeId: storeId,
         delta: delta,
       );
+
+      if (estEntree) {
+        final article = await db.articlesDao.getArticleById(articleId);
+        await _lots.enregistrerEntree(
+          articleId: articleId,
+          storeId: storeId,
+          quantite: quantite,
+          coutUnitaire: article?.prixAchat ?? 0,
+          sourceType: 'ouverture',
+        );
+      } else {
+        await _lots.consommerFifo(
+          articleId: articleId,
+          storeId: storeId,
+          quantite: quantite,
+          movementId: movementId,
+        );
+      }
     });
   }
 
@@ -148,7 +170,8 @@ class StockRepositoryImpl implements StockRepository {
         delta: quantite,
       );
 
-      await db.stockDao.createMovement(StockMovementsCompanion.insert(
+      final movementSortantId =
+          await db.stockDao.createMovement(StockMovementsCompanion.insert(
         articleId: articleId,
         storeId: storeFromId,
         typeMouvement: DbConstants.movementTransfert,
@@ -164,6 +187,23 @@ class StockRepositoryImpl implements StockRepository {
         reference: const Value('Transfert entrant'),
         userId: userId,
       ));
+
+      // Transfère le coût réel (FIFO) des lots du magasin source vers un
+      // nouveau lot au magasin destination, plutôt que de repartir du
+      // prix d'achat générique — conserve le prix de revient exact.
+      final coutTotal = await _lots.consommerFifo(
+        articleId: articleId,
+        storeId: storeFromId,
+        quantite: quantite,
+        movementId: movementSortantId,
+      );
+      await _lots.enregistrerEntree(
+        articleId: articleId,
+        storeId: storeToId,
+        quantite: quantite,
+        coutUnitaire: coutTotal / quantite,
+        sourceType: 'transfert',
+      );
     });
   }
 }

@@ -1,15 +1,31 @@
 import 'package:drift/drift.dart';
 import '../local/database.dart';
-import '../local/tables/articles_table.dart';
-import '../local/tables/categories_table.dart';
 import '../../domain/entities/article.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/article_repository.dart';
+import '../../core/services/loading_cost_allocation_service.dart';
 
 class ArticleRepositoryImpl implements ArticleRepository {
   final AppDatabase db;
 
   ArticleRepositoryImpl(this.db);
+
+  /// Prix de revient réel d'un article : moyenne PONDÉRÉE par la
+  /// quantité restante des lots de stock encore disponibles (tous
+  /// chargements confondus) — un article peut avoir du stock provenant
+  /// de plusieurs chargements à des coûts différents (réalité FIFO),
+  /// donc jamais une simple moyenne du dernier chargement d'origine.
+  /// Coûteux (requête supplémentaire) : réservé aux vues détail, jamais
+  /// aux listes.
+  Future<double?> _prixRevientPondere(int articleId) async {
+    final lots = await db.stockLotsDao.getLotsAvecReliquat(articleId);
+    if (lots.isEmpty) return null;
+    final quantite = lots.fold<double>(0, (s, l) => s + l.quantiteRestante);
+    if (quantite <= 0) return null;
+    final cout =
+        lots.fold<double>(0, (s, l) => s + l.quantiteRestante * l.coutUnitaire);
+    return cout / quantite;
+  }
 
   Future<ArticleEntity> _toEntity(Article a) async {
     String? categorieNom;
@@ -23,10 +39,11 @@ class ArticleRepositoryImpl implements ArticleRepository {
           .nom;
       if (categorieNom != null && categorieNom.isEmpty) categorieNom = null;
     }
-    String? supplierNom;
-    if (a.supplierId != null) {
-      final supplier = await db.suppliersDao.getSupplierById(a.supplierId!);
-      supplierNom = supplier?.nom;
+    String? chargementOrigineNumero;
+    if (a.chargementOrigineId != null) {
+      final chargement =
+          await db.loadingsDao.getLoadingById(a.chargementOrigineId!);
+      chargementOrigineNumero = chargement?.numero;
     }
     return ArticleEntity(
       id: a.id,
@@ -41,17 +58,30 @@ class ArticleRepositoryImpl implements ArticleRepository {
       dateCreation: a.dateCreation,
       actif: a.actif,
       tauxTvaDefaut: a.tauxTvaDefaut,
-      supplierId: a.supplierId,
-      supplierNom: supplierNom,
       description: a.description,
+      marque: a.marque,
+      dimension: a.dimension,
+      largeur: a.largeur,
+      hauteur: a.hauteur,
+      diametre: a.diametre,
+      type: a.type,
+      saison: a.saison,
+      etat: a.etat,
+      poids: a.poids,
+      chargementOrigineId: a.chargementOrigineId,
+      chargementOrigineNumero: chargementOrigineNumero,
+      prixRevient: await _prixRevientPondere(a.id),
     );
   }
 
+  /// Version liste : ne calcule pas [ArticleEntity.prixRevient] (coûteux,
+  /// une requête agrégée par article) — uniquement disponible via
+  /// [getArticleById]/[getArticleByCode] pour les vues détail.
   Future<List<ArticleEntity>> _toEntities(List<Article> list) async {
     final cats = await db.articlesDao.getAllCategories();
     final catMap = {for (final c in cats) c.id: c.nom};
-    final suppliers = await db.suppliersDao.getAllSuppliers();
-    final supplierMap = {for (final s in suppliers) s.id: s.nom};
+    final chargements = await db.loadingsDao.getAllLoadings();
+    final chargementMap = {for (final l in chargements) l.id: l.numero};
     return list
         .map((a) => ArticleEntity(
               id: a.id,
@@ -67,9 +97,20 @@ class ArticleRepositoryImpl implements ArticleRepository {
               dateCreation: a.dateCreation,
               actif: a.actif,
               tauxTvaDefaut: a.tauxTvaDefaut,
-              supplierId: a.supplierId,
-              supplierNom: a.supplierId != null ? supplierMap[a.supplierId] : null,
               description: a.description,
+              marque: a.marque,
+              dimension: a.dimension,
+              largeur: a.largeur,
+              hauteur: a.hauteur,
+              diametre: a.diametre,
+              type: a.type,
+              saison: a.saison,
+              etat: a.etat,
+              poids: a.poids,
+              chargementOrigineId: a.chargementOrigineId,
+              chargementOrigineNumero: a.chargementOrigineId != null
+                  ? chargementMap[a.chargementOrigineId]
+                  : null,
             ))
         .toList();
   }
@@ -114,8 +155,17 @@ class ArticleRepositoryImpl implements ArticleRepository {
     required double prixAchat,
     required double prixVente,
     required double stockMinimum,
-    int? supplierId,
     String? description,
+    String? marque,
+    String? dimension,
+    double? largeur,
+    double? hauteur,
+    double? diametre,
+    String? type,
+    String? saison,
+    String etat = 'neuf',
+    double? poids,
+    int? chargementOrigineId,
   }) {
     return db.articlesDao.createArticle(ArticlesCompanion.insert(
       code: code,
@@ -124,8 +174,17 @@ class ArticleRepositoryImpl implements ArticleRepository {
       prixAchat: Value(prixAchat),
       prixVente: prixVente,
       stockMinimum: Value(stockMinimum),
-      supplierId: Value(supplierId),
+      poids: Value(poids),
       description: Value(description),
+      marque: Value(marque),
+      dimension: Value(dimension),
+      largeur: Value(largeur),
+      hauteur: Value(hauteur),
+      diametre: Value(diametre),
+      type: Value(type),
+      saison: Value(saison),
+      etat: Value(etat),
+      chargementOrigineId: Value(chargementOrigineId),
     ));
   }
 
@@ -139,13 +198,53 @@ class ArticleRepositoryImpl implements ArticleRepository {
       prixAchat: article.prixAchat,
       prixVente: article.prixVente,
       stockMinimum: article.stockMinimum,
+      marque: article.marque,
+      dimension: article.dimension,
+      largeur: article.largeur,
+      hauteur: article.hauteur,
+      diametre: article.diametre,
+      type: article.type,
+      saison: article.saison,
+      etat: article.etat,
+      poids: article.poids,
+      chargementOrigineId: article.chargementOrigineId,
       stockTotal: article.stockTotal,
       dateCreation: article.dateCreation,
       actif: article.actif,
       tauxTvaDefaut: 18,
-      supplierId: article.supplierId,
       description: article.description,
     ));
+    // Un poids modifié peut changer la répartition "par poids" de
+    // dépenses partagées sur des chargements encore ouverts.
+    await _recalculerChargementsPourPoids(article.id);
+  }
+
+  /// Recalcule les chargements encore ouverts qui ont une dépense
+  /// partagée répartie "par poids" et contiennent cet article — un
+  /// changement de poids peut changer leur répartition.
+  Future<void> _recalculerChargementsPourPoids(int articleId) async {
+    final rows = await db.customSelect(
+      '''
+      SELECT DISTINCT p.chargement_id AS loading_id
+      FROM purchase_items pi
+      JOIN purchases p ON p.id = pi.purchase_id
+      JOIN loadings l ON l.id = p.chargement_id
+      WHERE pi.article_id = ? AND p.chargement_id IS NOT NULL AND l.statut = 'ouvert'
+        AND EXISTS (
+          SELECT 1 FROM expenses e
+          WHERE e.chargement_id = p.chargement_id
+            AND e.article_id IS NULL
+            AND e.methode_allocation = 'poids'
+        )
+      ''',
+      variables: [Variable.withInt(articleId)],
+      readsFrom: {db.purchaseItems, db.purchases, db.loadings, db.expenses},
+    ).get();
+    final service = LoadingCostAllocationService(db);
+    for (final r in rows) {
+      final loadingId = r.data['loading_id'] as int?;
+      if (loadingId != null) await service.recalculer(loadingId);
+    }
   }
 
   @override

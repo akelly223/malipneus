@@ -59,6 +59,18 @@ void main() {
   });
 
   testWidgets('admin voit tous les modules', (tester) async {
+    // Le menu latéral compte désormais assez d'entrées (Personnel, Paie,
+    // Commissions, Dépenses, Chargements...) pour dépasser la hauteur par
+    // défaut de la surface de test (600px logiques) : sans agrandir la
+    // surface, les entrées en bas de liste (Stock, Documents, Paramètres)
+    // ne sont jamais construites par le ListView et le finder ne les
+    // trouve pas, alors qu'elles s'affichent normalement dans l'app réelle
+    // une fois défilées.
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await pump(tester, admin);
 
     for (final label in [

@@ -217,7 +217,7 @@ class ArticlesStatsSection extends ConsumerWidget {
       titre: 'Articles',
       cards: [
         _MiniStat(
-          label: 'Nombre d\'articles',
+          label: "Nombre d'articles",
           valeur: '${stats.nombreArticles}',
           icon: Icons.inventory_2_outlined,
           color: AppColors.primary,
@@ -279,6 +279,54 @@ class ClientsFournisseursStatsSection extends ConsumerWidget {
           valeur: '${stats.nombreFournisseurs}',
           icon: Icons.local_shipping_outlined,
           color: AppColors.secondary,
+        ),
+      ],
+    );
+  }
+}
+
+/// Section "Personnel & Chargements" (section 16) : dépenses générales,
+/// salaires payés, commissions commerciales réglées et pertes de stock,
+/// recalculées pour la période sélectionnée.
+class PersonnelChargementsStatsSection extends ConsumerWidget {
+  final DashboardStatsEntity stats;
+
+  const PersonnelChargementsStatsSection({super.key, required this.stats});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final utilisateur = ref.watch(sessionProvider);
+    if (!Permissions.peutVoirBenefice(utilisateur)) {
+      return const SizedBox.shrink();
+    }
+    final periode = ref.watch(dashboardPeriodeProvider);
+    return _StatsSection(
+      titre: 'Personnel & Chargements — ${periode.libelle}',
+      cards: [
+        _MiniStat(
+          label: 'Dépenses',
+          valeur: CurrencyFormatter.format(stats.depensesPeriode),
+          icon: Icons.request_quote_outlined,
+          color: AppColors.warning,
+        ),
+        _MiniStat(
+          label: 'Salaires payés',
+          valeur: CurrencyFormatter.format(stats.salairesPayesPeriode),
+          icon: Icons.payments_outlined,
+          color: AppColors.secondary,
+        ),
+        _MiniStat(
+          label: 'Commissions réglées',
+          valeur:
+              CurrencyFormatter.format(stats.commissionsCommercialesPeriode),
+          icon: Icons.percent_rounded,
+          color: AppColors.secondary,
+        ),
+        _MiniStat(
+          label: 'Pertes (unités)',
+          valeur: stats.pertesPeriode.toStringAsFixed(0),
+          icon: Icons.report_gmailerrorred_outlined,
+          color: stats.pertesPeriode == 0 ? AppColors.success : AppColors.danger,
         ),
       ],
     );

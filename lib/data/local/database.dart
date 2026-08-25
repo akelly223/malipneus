@@ -27,6 +27,23 @@ import 'tables/document_payments_table.dart';
 import 'tables/document_history_table.dart';
 import 'tables/drafts_table.dart';
 import 'tables/inventories_table.dart';
+import 'tables/job_positions_table.dart';
+import 'tables/employees_table.dart';
+import 'tables/employee_absences_table.dart';
+import 'tables/payroll_settings_table.dart';
+import 'tables/payroll_periods_table.dart';
+import 'tables/payslips_table.dart';
+import 'tables/payslip_payments_table.dart';
+import 'tables/salary_advances_table.dart';
+import 'tables/commission_configs_table.dart';
+import 'tables/commission_config_overrides_table.dart';
+import 'tables/commission_settlements_table.dart';
+import 'tables/expense_categories_table.dart';
+import 'tables/expenses_table.dart';
+import 'tables/loadings_table.dart';
+import 'tables/stock_lots_table.dart';
+import 'tables/stock_lot_consumptions_table.dart';
+import 'tables/expense_allocations_table.dart';
 
 import 'daos/users_dao.dart';
 import 'daos/stores_dao.dart';
@@ -44,6 +61,12 @@ import 'daos/tva_rates_dao.dart';
 import 'daos/commercial_documents_dao.dart';
 import 'daos/draft_dao.dart';
 import 'daos/inventories_dao.dart';
+import 'daos/personnel_dao.dart';
+import 'daos/payroll_dao.dart';
+import 'daos/commissions_dao.dart';
+import 'daos/expenses_dao.dart';
+import 'daos/loadings_dao.dart';
+import 'daos/stock_lots_dao.dart';
 
 import '../../core/constants/app_identity.dart';
 import '../../core/constants/db_constants.dart';
@@ -79,6 +102,23 @@ part 'database.g.dart';
     Drafts,
     Inventories,
     InventoryLines,
+    JobPositions,
+    Employees,
+    EmployeeAbsences,
+    PayrollSettings,
+    PayrollPeriods,
+    Payslips,
+    PayslipPayments,
+    SalaryAdvances,
+    CommissionConfigs,
+    CommissionConfigOverrides,
+    CommissionSettlements,
+    ExpenseCategories,
+    Expenses,
+    Loadings,
+    StockLots,
+    StockLotConsumptions,
+    ExpenseAllocations,
   ],
   daos: [
     UsersDao,
@@ -97,6 +137,12 @@ part 'database.g.dart';
     CommercialDocumentsDao,
     DraftDao,
     InventoriesDao,
+    PersonnelDao,
+    PayrollDao,
+    CommissionsDao,
+    ExpensesDao,
+    LoadingsDao,
+    StockLotsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -104,13 +150,19 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           _log('onCreate → schemaVersion $schemaVersion : création de toutes les tables');
           await m.createAll();
+          // Une base fraîchement créée passe directement au schéma le plus
+          // récent : onUpgrade ne s'exécute jamais dans ce cas, donc les
+          // données de référence (postes, catégories de dépenses, réglages
+          // de paie) doivent être semées ici aussi pour que les modules
+          // Personnel/Dépenses ne soient pas vides à l'installation.
+          await _seederDonneesReferenceV18();
           _log('onCreate terminé avec succès');
         },
 
@@ -386,6 +438,164 @@ class AppDatabase extends _$AppDatabase {
                 'ALTER TABLE articles ADD COLUMN description TEXT NULL');
           }
 
+          if (from < 18) {
+            _log('Migration v18 : Personnel, Paie, Commerciaux, Dépenses, '
+                'Chargements, lots de stock');
+
+            // ── Personnel / RH ──────────────────────────────────────────────
+            await _creerTableSiAbsente(
+                'job_positions', () => m.createTable(jobPositions));
+            await _creerTableSiAbsente(
+                'employees', () => m.createTable(employees));
+            await _creerTableSiAbsente('employee_absences',
+                () => m.createTable(employeeAbsences));
+            await _creerTableSiAbsente(
+                'payroll_settings', () => m.createTable(payrollSettings));
+
+            // ── Paie ─────────────────────────────────────────────────────────
+            await _creerTableSiAbsente(
+                'payroll_periods', () => m.createTable(payrollPeriods));
+            await _creerTableSiAbsente(
+                'payslips', () => m.createTable(payslips));
+            await _creerTableSiAbsente(
+                'payslip_payments', () => m.createTable(payslipPayments));
+            await _creerTableSiAbsente(
+                'salary_advances', () => m.createTable(salaryAdvances));
+
+            // ── Commerciaux / Commissions ──────────────────────────────────
+            await _creerTableSiAbsente('commission_configs',
+                () => m.createTable(commissionConfigs));
+            await _creerTableSiAbsente('commission_config_overrides',
+                () => m.createTable(commissionConfigOverrides));
+            await _creerTableSiAbsente('commission_settlements',
+                () => m.createTable(commissionSettlements));
+            await _ajouterColonneSiAbsente(
+                'commercial_documents',
+                'vendeur_employee_id',
+                'ALTER TABLE commercial_documents ADD COLUMN '
+                    'vendeur_employee_id INTEGER NULL REFERENCES employees(id)');
+            await _ajouterColonneSiAbsente(
+                'document_lines',
+                'commission_unitaire',
+                'ALTER TABLE document_lines ADD COLUMN '
+                    'commission_unitaire REAL NULL');
+            await _ajouterColonneSiAbsente(
+                'document_lines',
+                'commission_montant',
+                'ALTER TABLE document_lines ADD COLUMN '
+                    'commission_montant REAL NULL');
+            await _ajouterColonneSiAbsente(
+                'document_lines',
+                'commission_settlement_id',
+                'ALTER TABLE document_lines ADD COLUMN '
+                    'commission_settlement_id INTEGER NULL '
+                    'REFERENCES commission_settlements(id)');
+
+            // ── Dépenses ─────────────────────────────────────────────────────
+            await _creerTableSiAbsente('expense_categories',
+                () => m.createTable(expenseCategories));
+            await _creerTableSiAbsente(
+                'expenses', () => m.createTable(expenses));
+
+            // ── Chargements / coût de revient ──────────────────────────────
+            await _creerTableSiAbsente(
+                'loadings', () => m.createTable(loadings));
+            await _ajouterColonneSiAbsente(
+                'purchases',
+                'chargement_id',
+                'ALTER TABLE purchases ADD COLUMN '
+                    'chargement_id INTEGER NULL REFERENCES loadings(id)');
+            await _creerTableSiAbsente(
+                'stock_lots', () => m.createTable(stockLots));
+            await _creerTableSiAbsente('stock_lot_consumptions',
+                () => m.createTable(stockLotConsumptions));
+            await _ajouterColonneSiAbsente('stock_movements', 'commentaire',
+                'ALTER TABLE stock_movements ADD COLUMN commentaire TEXT NULL');
+
+            await _seederDonneesReferenceV18();
+          }
+
+          if (from < 19) {
+            _log('Migration v19 : spécialisation pneus — caractéristiques '
+                'produit, dépense liée à un pneu, chargement (container, '
+                'date d\'arrivée). La logique dépôt-vente/auteur (retirée '
+                'du code applicatif) laisse d\'anciennes colonnes inertes '
+                '(suppliers.est_depot, suppliers.part_auteur_pct, '
+                'articles.supplier_id) : elles ne sont plus lues/écrites.');
+
+            // ── Caractéristiques pneu ────────────────────────────────────
+            await _ajouterColonneSiAbsente('articles', 'marque',
+                'ALTER TABLE articles ADD COLUMN marque TEXT NULL');
+            await _ajouterColonneSiAbsente('articles', 'dimension',
+                'ALTER TABLE articles ADD COLUMN dimension TEXT NULL');
+            await _ajouterColonneSiAbsente('articles', 'largeur',
+                'ALTER TABLE articles ADD COLUMN largeur REAL NULL');
+            await _ajouterColonneSiAbsente('articles', 'hauteur',
+                'ALTER TABLE articles ADD COLUMN hauteur REAL NULL');
+            await _ajouterColonneSiAbsente('articles', 'diametre',
+                'ALTER TABLE articles ADD COLUMN diametre REAL NULL');
+            await _ajouterColonneSiAbsente('articles', 'type',
+                'ALTER TABLE articles ADD COLUMN type TEXT NULL');
+            await _ajouterColonneSiAbsente('articles', 'saison',
+                'ALTER TABLE articles ADD COLUMN saison TEXT NULL');
+            await _ajouterColonneSiAbsente('articles', 'etat',
+                "ALTER TABLE articles ADD COLUMN etat TEXT NOT NULL DEFAULT 'neuf'");
+            await _ajouterColonneSiAbsente(
+                'articles',
+                'chargement_origine_id',
+                'ALTER TABLE articles ADD COLUMN '
+                    'chargement_origine_id INTEGER NULL REFERENCES loadings(id)');
+
+            // ── Dépense liée à un pneu précis ────────────────────────────
+            await _ajouterColonneSiAbsente(
+                'expenses',
+                'article_id',
+                'ALTER TABLE expenses ADD COLUMN '
+                    'article_id INTEGER NULL REFERENCES articles(id)');
+
+            // ── Chargement : container + date d'arrivée ──────────────────
+            await _ajouterColonneSiAbsente('loadings', 'container',
+                'ALTER TABLE loadings ADD COLUMN container TEXT NULL');
+            await _ajouterColonneSiAbsente('loadings', 'date_arrivee',
+                'ALTER TABLE loadings ADD COLUMN date_arrivee INTEGER NULL');
+            await _ajouterColonneSiAbsente('loadings', 'reference',
+                'ALTER TABLE loadings ADD COLUMN reference TEXT NULL');
+          }
+
+          if (from < 20) {
+            _log('Migration v20 : coût de revient réel par article — '
+                'poids article, méthode de répartition des dépenses, '
+                'allocations manuelles, lien lot↔ligne d\'achat, nom de '
+                'chargement');
+
+            // ── Poids article (répartition "par poids") ──────────────────
+            await _ajouterColonneSiAbsente('articles', 'poids',
+                'ALTER TABLE articles ADD COLUMN poids REAL NULL');
+
+            // ── Méthode de répartition d'une dépense partagée ─────────────
+            await _ajouterColonneSiAbsente(
+                'expenses',
+                'methode_allocation',
+                "ALTER TABLE expenses ADD COLUMN "
+                    "methode_allocation TEXT NOT NULL DEFAULT 'quantite'");
+
+            // ── Allocations manuelles (méthode 'manuelle') ────────────────
+            await _creerTableSiAbsente(
+                'expense_allocations', () => m.createTable(expenseAllocations));
+
+            // ── Lien précis lot de stock ↔ ligne d'achat ──────────────────
+            await _ajouterColonneSiAbsente(
+                'stock_lots',
+                'purchase_item_id',
+                'ALTER TABLE stock_lots ADD COLUMN '
+                    'purchase_item_id INTEGER NULL REFERENCES purchase_items(id)');
+            await _backfillPurchaseItemIdSurLots();
+
+            // ── Nom de chargement choisi par l'utilisateur ────────────────
+            await _ajouterColonneSiAbsente('loadings', 'nom',
+                'ALTER TABLE loadings ADD COLUMN nom TEXT NULL');
+          }
+
           _log('Migration v$from → v$to terminée avec succès');
         },
 
@@ -438,6 +648,55 @@ class AppDatabase extends _$AppDatabase {
       'PRAGMA table_info($table)',
     ).get();
     return result.any((row) => row.data['name'] == colonne);
+  }
+
+  /// Données de référence par défaut du schéma v18 (postes, catégories
+  /// de dépenses, réglages de paie). Idempotent (`INSERT OR IGNORE` /
+  /// clé primaire fixe) — appelée à la fois depuis `onCreate` (base
+  /// neuve) et depuis la migration `v18` (base existante mise à jour).
+  Future<void> _seederDonneesReferenceV18() async {
+    await customStatement('''
+      INSERT OR IGNORE INTO job_positions(nom, actif) VALUES
+      ('Magasinier', 1), ('Responsable', 1), ('Chauffeur', 1),
+      ('Comptable', 1), ('Commercial', 1), ('Autre', 1)
+    ''');
+    await customStatement('''
+      INSERT OR IGNORE INTO expense_categories(nom, actif) VALUES
+      ('Achat de pneus', 1), ('Chargement container', 1),
+      ('Transport', 1), ('Transitaire', 1), ('Douane', 1),
+      ('Manutention', 1), ('Loyer magasin', 1), ('Électricité', 1),
+      ('Eau', 1), ('Internet', 1), ('Salaires', 1),
+      ('Avances sur salaire', 1), ('Commissions commerciales', 1),
+      ('Pertes', 1), ('Réparations', 1), ('Autres dépenses', 1)
+    ''');
+    await customStatement('''
+      INSERT OR IGNORE INTO payroll_settings(id, jours_theoriques_par_mois)
+      VALUES (1, 30)
+    ''');
+  }
+
+  /// Rattache best-effort les lots de stock existants à leur ligne
+  /// d'achat précise : seulement quand la paire (achat, article) ne
+  /// correspond qu'à UNE seule ligne d'achat (cas non ambigu). Les lots
+  /// restés ambigus gardent purchase_item_id NULL — le calcul de coût
+  /// se replie alors sur (purchaseId, articleId), comme avant cette
+  /// migration.
+  Future<void> _backfillPurchaseItemIdSurLots() async {
+    await customStatement('''
+      UPDATE stock_lots
+      SET purchase_item_id = (
+        SELECT pi.id FROM purchase_items pi
+        WHERE pi.purchase_id = stock_lots.purchase_id
+          AND pi.article_id = stock_lots.article_id
+      )
+      WHERE stock_lots.purchase_id IS NOT NULL
+        AND stock_lots.purchase_item_id IS NULL
+        AND (
+          SELECT COUNT(*) FROM purchase_items pi2
+          WHERE pi2.purchase_id = stock_lots.purchase_id
+            AND pi2.article_id = stock_lots.article_id
+        ) = 1
+    ''');
   }
 
   static void _log(String message) {

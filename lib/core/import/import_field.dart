@@ -112,7 +112,7 @@ const Map<ImportField, ImportFieldMeta> importFieldMeta = {
     label: 'Code-barres',
     aliases: [
       'codebarres', 'codebarre', 'barcode', 'ean', 'ean13',
-      'gtin', 'upc', 'isbn', 'barres',
+      'gtin', 'upc', 'dot', 'barres',
     ],
   ),
 

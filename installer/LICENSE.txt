@@ -1,34 +1,35 @@
 CONTRAT DE LICENCE D'UTILISATION
 
-StockMali
+MaliPneus
 
 Copyright © MALI_CODE CENTER. Tous droits réservés.
 
 ---
 
-Merci d'avoir choisi StockMali, une solution conçue pour accompagner
-les commerçants, libraires, grossistes et détaillants dans la gestion
-quotidienne de leurs activités.
+Merci d'avoir choisi MaliPneus, une solution conçue pour accompagner
+les vendeurs et grossistes de pneus dans la gestion quotidienne de
+leurs activités.
 
 En installant, copiant ou utilisant ce logiciel, vous acceptez les
 conditions suivantes :
 
 1. OBJET DE LA LICENCE
 
-Cette licence vous accorde un droit d'utilisation du logiciel StockMali
+Cette licence vous accorde un droit d'utilisation du logiciel MaliPneus
 pour les besoins internes de votre activité commerciale.
 
 Le logiciel permet notamment :
-- La gestion des articles et du stock
+- La gestion des pneus et du stock
 - La gestion des clients et fournisseurs
 - La gestion des achats et ventes
 - La création de devis et factures
 - Le suivi des dettes clients
+- La gestion du personnel et de la paie
 - L'analyse des ventes et statistiques
 
 2. PROPRIÉTÉ INTELLECTUELLE
 
-Le logiciel StockMali est développé et édité par MALI_CODE CENTER.
+Le logiciel MaliPneus est développé et édité par MALI_CODE CENTER.
 Le logiciel, son interface, son code source, sa documentation, son logo
 et ses éléments graphiques sont protégés par les lois relatives à la
 propriété intellectuelle.
@@ -39,7 +40,7 @@ redistribution non autorisée est strictement interdite sans l'accord
 
 3. DONNÉES UTILISATEUR
 
-Les données créées par l'utilisateur (articles, clients, fournisseurs,
+Les données créées par l'utilisateur (pneus, clients, fournisseurs,
 factures, achats, ventes, statistiques, etc.) restent la propriété
 exclusive de l'utilisateur.
 
@@ -89,6 +90,6 @@ Développé avec fierté au Mali
 MALI_CODE CENTER
 Solutions numériques pour les entreprises africaines.
 
-Version : 1.0.0
+Version : 3.0.0
 
 Contact : mlcode223@gmail.com | +223 75 96 51 85

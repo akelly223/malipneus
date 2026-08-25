@@ -9,6 +9,8 @@ mixin _$QuotesDaoMixin on DatabaseAccessor<AppDatabase> {
   $QuotesTable get quotes => attachedDatabase.quotes;
   $CategoriesTable get categories => attachedDatabase.categories;
   $SuppliersTable get suppliers => attachedDatabase.suppliers;
+  $UsersTable get users => attachedDatabase.users;
+  $LoadingsTable get loadings => attachedDatabase.loadings;
   $ArticlesTable get articles => attachedDatabase.articles;
   $QuoteItemsTable get quoteItems => attachedDatabase.quoteItems;
 }

@@ -138,6 +138,15 @@ class DashboardStatsEntity {
   // ── Conseils intelligents.
   final List<ConseilDashboard> conseils;
 
+  // ── Personnel / Chargements (période sélectionnée) ──────────────────────
+  // Vision 360° de l'entreprise (section 16) : dépenses générales,
+  // salaires effectivement payés, commissions commerciales réglées et
+  // pertes de stock, toutes recalculées pour la période sélectionnée.
+  final double depensesPeriode;
+  final double salairesPayesPeriode;
+  final double commissionsCommercialesPeriode;
+  final double pertesPeriode;
+
   const DashboardStatsEntity({
     required this.ventesJour,
     required this.ventesSemaine,
@@ -172,6 +181,10 @@ class DashboardStatsEntity {
     this.nombreProformasBrouillon = 0,
     this.nombreBCEnAttente = 0,
     this.conseils = const [],
+    this.depensesPeriode = 0,
+    this.salairesPayesPeriode = 0,
+    this.commissionsCommercialesPeriode = 0,
+    this.pertesPeriode = 0,
   });
 
   /// Variation CA mois actuel vs mois précédent (en %).

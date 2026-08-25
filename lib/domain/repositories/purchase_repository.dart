@@ -26,6 +26,8 @@ abstract class PurchaseRepository {
     double montantPayeInitial = 0,
     String? modePaiementInitial,
     String statut = 'recu',
+    int? chargementId,
+    DateTime? dateAchat,
   });
 
   /// Réceptionne un bon de commande : applique enfin l'entrée de
@@ -48,6 +50,7 @@ abstract class PurchaseRepository {
     required int modifieParUserId,
     required List<PurchaseCartItemInput> items,
     double remiseGlobale = 0,
+    DateTime? dateAchat,
   });
 
   /// Total cumulé des achats effectués auprès d'un fournisseur,

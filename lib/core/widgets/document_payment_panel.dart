@@ -4,6 +4,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/deferred_set_state.dart';
 import '../../domain/entities/commercial_document.dart';
 import '../../domain/entities/document_input.dart';
 import 'app_button.dart';
@@ -44,7 +45,8 @@ const documentPaymentModes = [
   ('avoir', 'Avoir'),
 ];
 
-class _DocumentPaymentPanelState extends State<DocumentPaymentPanel> {
+class _DocumentPaymentPanelState extends State<DocumentPaymentPanel>
+    with DeferredSetStateMixin<DocumentPaymentPanel> {
   static const _modes = documentPaymentModes;
 
   final _montantCtrl = TextEditingController();
@@ -72,10 +74,10 @@ class _DocumentPaymentPanelState extends State<DocumentPaymentPanel> {
     _referenceCtrl.clear();
     _datePaiement = DateTime.now();
     _modePaiement = 'especes';
-    setState(() => _showForm = true);
+    deferSetState(() => _showForm = true);
   }
 
-  void _annulerFormulaire() => setState(() => _showForm = false);
+  void _annulerFormulaire() => deferSetState(() => _showForm = false);
 
   Future<void> _choisirDate() async {
     final picked = await showDatePicker(
@@ -83,6 +85,7 @@ class _DocumentPaymentPanelState extends State<DocumentPaymentPanel> {
       initialDate: _datePaiement,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 1)),
+      locale: const Locale('fr', 'FR'),
     );
     if (picked != null) setState(() => _datePaiement = picked);
   }
@@ -97,7 +100,7 @@ class _DocumentPaymentPanelState extends State<DocumentPaymentPanel> {
       reference:
           _referenceCtrl.text.trim().isNotEmpty ? _referenceCtrl.text.trim() : null,
     ));
-    setState(() => _showForm = false);
+    deferSetState(() => _showForm = false);
   }
 
   @override

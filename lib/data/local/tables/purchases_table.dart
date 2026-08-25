@@ -3,6 +3,7 @@ import 'suppliers_table.dart';
 import 'stores_table.dart';
 import 'articles_table.dart';
 import 'users_table.dart';
+import 'loadings_table.dart';
 
 /// Table des achats fournisseurs.
 ///
@@ -49,6 +50,12 @@ class Purchases extends Table {
   /// modification (null si jamais modifié).
   IntColumn get modifieParUserId =>
       integer().nullable().references(Users, #id)();
+
+  /// Chargement auquel cet achat est rattaché, si applicable. Un achat
+  /// non rattaché à un chargement se comporte exactement comme
+  /// aujourd'hui (aucun changement de comportement).
+  IntColumn get chargementId =>
+      integer().nullable().references(Loadings, #id)();
 }
 
 /// Lignes d'un achat fournisseur.

@@ -1,20 +1,19 @@
 import 'package:drift/drift.dart';
 import '../local/database.dart';
-import '../local/tables/invoices_table.dart';
-import '../local/tables/client_debts_table.dart';
-import '../local/tables/payments_table.dart';
-import '../local/tables/stock_movements_table.dart';
-import '../local/tables/purchases_table.dart';
 import '../../domain/entities/invoice.dart';
 import '../../domain/entities/cart_item_input.dart';
 import '../../domain/repositories/invoice_repository.dart';
 import '../../domain/exceptions/stock_insuffisant_exception.dart';
 import '../../core/constants/db_constants.dart';
+import '../../core/services/stock_lot_service.dart';
 
 class InvoiceRepositoryImpl implements InvoiceRepository {
   final AppDatabase db;
+  late final StockLotService _lots;
 
-  InvoiceRepositoryImpl(this.db);
+  InvoiceRepositoryImpl(this.db) {
+    _lots = StockLotService(db);
+  }
 
   double _calculerTotal(List<CartItemInput> items, double remiseGlobale) {
     final sousTotal = items.fold<double>(0, (s, i) => s + i.totalLigne);
@@ -211,7 +210,8 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           storeId: storeId,
           delta: -item.quantite,
         );
-        await db.stockDao.createMovement(StockMovementsCompanion.insert(
+        final movementId =
+            await db.stockDao.createMovement(StockMovementsCompanion.insert(
           articleId: item.articleId,
           storeId: storeId,
           typeMouvement: DbConstants.movementSortie,
@@ -219,47 +219,11 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           reference: Value(numero),
           userId: userId,
         ));
-      }
-
-      // Dépôt-vente : pour chaque ligne vendue dont l'article appartient
-      // à un auteur en dépôt, génère un achat fournisseur "fantôme" non
-      // payé représentant la part due à l'auteur. Contrairement à un
-      // achat normal, on insère directement via le DAO (pas de mouvement
-      // de stock ni de mise à jour de prix_achat : le stock a déjà été
-      // mouvementé par la vente ci-dessus).
-      for (final item in items) {
-        final article = await db.articlesDao.getArticleById(item.articleId);
-        if (article?.supplierId == null) continue;
-        final supplier =
-            await db.suppliersDao.getSupplierById(article!.supplierId!);
-        if (supplier == null || !supplier.estDepot) continue;
-        if (supplier.partAuteurPct <= 0) continue;
-
-        final montantDu = item.totalLigne * supplier.partAuteurPct / 100;
-        if (montantDu <= 0) continue;
-
-        final numeroDepot =
-            await db.documentCountersDao.genererProchainNumero('DEP');
-        await db.purchasesDao.createPurchaseWithItems(
-          PurchasesCompanion.insert(
-            numero: numeroDepot,
-            supplierId: supplier.id,
-            storeId: storeId,
-            userId: userId,
-            totalHt: Value(montantDu),
-            totalFinal: Value(montantDu),
-            montantPaye: const Value(0),
-            statutPaiement: const Value(DbConstants.invoiceStatusNonPaye),
-          ),
-          [
-            PurchaseItemsCompanion.insert(
-              purchaseId: 0,
-              articleId: item.articleId,
-              quantite: item.quantite,
-              prixAchatUnitaire: montantDu / item.quantite,
-              totalLigne: montantDu,
-            ),
-          ],
+        await _lots.consommerFifo(
+          articleId: item.articleId,
+          storeId: storeId,
+          quantite: item.quantite,
+          movementId: movementId,
         );
       }
 
@@ -337,6 +301,15 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           reference: Value('CORRECTION-${existante.numero}'),
           userId: modifieParUserId,
         ));
+        final article =
+            await db.articlesDao.getArticleById(ancienne.articleId);
+        await _lots.enregistrerEntree(
+          articleId: ancienne.articleId,
+          storeId: existante.storeId,
+          quantite: ancienne.quantite,
+          coutUnitaire: article?.prixAchat ?? 0,
+          sourceType: 'ajustement',
+        );
       }
 
       // ÉTAPE 2 : Vérification du stock pour les nouvelles quantités.
@@ -406,7 +379,8 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           storeId: storeId,
           delta: -item.quantite,
         );
-        await db.stockDao.createMovement(StockMovementsCompanion.insert(
+        final movementId =
+            await db.stockDao.createMovement(StockMovementsCompanion.insert(
           articleId: item.articleId,
           storeId: storeId,
           typeMouvement: DbConstants.movementSortie,
@@ -414,6 +388,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           reference: Value('MOD-${existante.numero}'),
           userId: modifieParUserId,
         ));
+        await _lots.consommerFifo(
+          articleId: item.articleId,
+          storeId: storeId,
+          quantite: item.quantite,
+          movementId: movementId,
+        );
       }
 
       // Mise à jour de la dette client si le total a changé.

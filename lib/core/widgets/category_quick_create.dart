@@ -8,7 +8,7 @@ import 'app_button.dart';
 import 'app_text_field.dart';
 
 /// Ouvre une popup de saisie pour créer une nouvelle catégorie (ex:
-/// Roman, Développement personnel, Livres pour enfants) sans quitter
+/// Pneus tourisme, Pneus 4x4/SUV, Chambres à air) sans quitter
 /// l'écran en cours. Retourne l'id de la catégorie créée, ou null si
 /// l'utilisateur a annulé.
 ///
@@ -25,7 +25,7 @@ Future<int?> creerNouvelleCategorieDialog(
       content: AppTextField(
         label: 'Nom de la catégorie',
         controller: nomController,
-        hint: 'Ex: Roman, Développement personnel...',
+        hint: 'Ex: Pneus tourisme, Pneus 4x4/SUV...',
         autofocus: true,
       ),
       actions: [

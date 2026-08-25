@@ -11,6 +11,7 @@ import '../../core/widgets/document_action_bar.dart';
 import '../../core/widgets/document_status_badge.dart';
 import '../../core/widgets/document_transform_dialog.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/deferred_set_state.dart';
 import '../../domain/entities/commercial_document.dart';
 import '../../domain/entities/document_type.dart';
 import 'documents_list_screen.dart' show routePrefixPourType;
@@ -31,7 +32,8 @@ class PickListScreen extends ConsumerStatefulWidget {
   ConsumerState<PickListScreen> createState() => _PickListScreenState();
 }
 
-class _PickListScreenState extends ConsumerState<PickListScreen> {
+class _PickListScreenState extends ConsumerState<PickListScreen>
+    with DeferredSetStateMixin<PickListScreen> {
   final Set<int> _lignesPretes = {};
   bool _isLoading = false;
 
@@ -338,7 +340,7 @@ class _PickListScreenState extends ConsumerState<PickListScreen> {
                                 label: 'Tout marquer prêt',
                                 icon: Icons.done_all_rounded,
                                 isOutlined: true,
-                                onPressed: () => setState(() {
+                                onPressed: () => deferSetState(() {
                                   _lignesPretes.addAll(
                                       doc.lignes.map((l) => l.id));
                                 }),
@@ -349,7 +351,7 @@ class _PickListScreenState extends ConsumerState<PickListScreen> {
                                 icon: Icons.remove_done_rounded,
                                 isOutlined: true,
                                 onPressed: () =>
-                                    setState(() => _lignesPretes.clear()),
+                                    deferSetState(() => _lignesPretes.clear()),
                               ),
                           ],
                         ),

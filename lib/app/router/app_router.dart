@@ -44,6 +44,15 @@ import '../../presentation/migration/migration_hub_screen.dart';
 import '../../presentation/migration/import_wizard_screen.dart';
 import '../../presentation/inventory/inventory_list_screen.dart';
 import '../../presentation/inventory/inventory_detail_screen.dart';
+import '../../presentation/personnel/employees_list_screen.dart';
+import '../../presentation/personnel/employee_detail_screen.dart';
+import '../../presentation/payroll/payroll_periods_list_screen.dart';
+import '../../presentation/payroll/payroll_period_detail_screen.dart';
+import '../../presentation/payroll/payslip_detail_screen.dart';
+import '../../presentation/commissions/commission_settlement_screen.dart';
+import '../../presentation/expenses/expenses_list_screen.dart';
+import '../../presentation/loadings/loadings_list_screen.dart';
+import '../../presentation/loadings/loading_detail_screen.dart';
 import '../../core/import/import_config.dart';
 import '../../domain/entities/document_type.dart';
 
@@ -191,6 +200,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                       DbConstants.purchaseStatutCommande
                   ? DbConstants.purchaseStatutCommande
                   : DbConstants.purchaseStatutRecu,
+              initialChargementId: state.uri.queryParameters['chargementId'] !=
+                      null
+                  ? int.tryParse(state.uri.queryParameters['chargementId']!)
+                  : null,
             ),
           ),
           GoRoute(
@@ -288,6 +301,60 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/inventory/:id',
             builder: (context, state) => InventoryDetailScreen(
               inventoryId: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+
+          // Personnel (réservé admin)
+          GoRoute(
+            path: '/employees',
+            builder: (context, state) => const EmployeesListScreen(),
+          ),
+          GoRoute(
+            path: '/employees/:id',
+            builder: (context, state) => EmployeeDetailScreen(
+              employeeId: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+
+          // Paie (réservé admin)
+          GoRoute(
+            path: '/payroll',
+            builder: (context, state) => const PayrollPeriodsListScreen(),
+          ),
+          GoRoute(
+            path: '/payroll/payslip/:id',
+            builder: (context, state) => PayslipDetailScreen(
+              payslipId: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+          GoRoute(
+            path: '/payroll/:id',
+            builder: (context, state) => PayrollPeriodDetailScreen(
+              periodId: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+
+          // Commissions commerciales (réservé admin)
+          GoRoute(
+            path: '/commissions',
+            builder: (context, state) => const CommissionSettlementScreen(),
+          ),
+
+          // Dépenses (réservé admin)
+          GoRoute(
+            path: '/expenses',
+            builder: (context, state) => const ExpensesListScreen(),
+          ),
+
+          // Chargements (réservé admin)
+          GoRoute(
+            path: '/loadings',
+            builder: (context, state) => const LoadingsListScreen(),
+          ),
+          GoRoute(
+            path: '/loadings/:id',
+            builder: (context, state) => LoadingDetailScreen(
+              loadingId: int.parse(state.pathParameters['id']!),
             ),
           ),
 

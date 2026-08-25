@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
 import 'categories_table.dart';
 import 'stores_table.dart';
-import 'suppliers_table.dart';
+import 'loadings_table.dart';
 
-/// Table des articles (produits vendus).
+/// Table des articles — un pneu (référence produit vendue).
 ///
 /// Le champ [stockTotal] est une valeur dénormalisée recalculée
 /// automatiquement (somme des stocks par magasin) pour un affichage
@@ -37,14 +37,46 @@ class Articles extends Table {
   /// Taux TVA par défaut pré-rempli lors de la saisie d'une ligne (0.0 ou 18.0).
   RealColumn get tauxTvaDefaut => real().withDefault(const Constant(18))();
 
-  /// Auteur en dépôt-vente propriétaire de cet article (null si l'article
-  /// n'est pas en dépôt-vente). Utilisé à la vente pour calculer la part
-  /// due à l'auteur — voir [Suppliers.estDepot] et [Suppliers.partAuteurPct].
-  IntColumn get supplierId =>
-      integer().nullable().references(Suppliers, #id)();
-
   /// Description libre optionnelle (notes, détails produit...).
   TextColumn get description => text().nullable()();
+
+  // ── Caractéristiques pneu ──────────────────────────────────────────
+
+  TextColumn get marque => text().nullable()();
+
+  /// Libellé de dimension complet (ex: "195/65 R15"), utile pour les
+  /// formats non standard (agricole, génie civil...) où largeur/hauteur/
+  /// diamètre séparés ne suffisent pas à décrire la référence.
+  TextColumn get dimension => text().nullable()();
+
+  /// Largeur du pneu en mm.
+  RealColumn get largeur => real().nullable()();
+
+  /// Hauteur/profil en pourcentage de la largeur.
+  RealColumn get hauteur => real().nullable()();
+
+  /// Diamètre de la jante en pouces.
+  RealColumn get diametre => real().nullable()();
+
+  /// Type de véhicule visé (tourisme, camionnette, poids lourd, moto,
+  /// agricole, génie civil...).
+  TextColumn get type => text().nullable()();
+
+  /// Saison (été, hiver, toutes saisons), si applicable.
+  TextColumn get saison => text().nullable()();
+
+  /// État du pneu : 'neuf' (défaut), 'occasion', 'rechape'.
+  TextColumn get etat => text().withDefault(const Constant('neuf'))();
+
+  /// Chargement dont provient le stock le plus récent de cette
+  /// référence, utilisé pour retrouver son prix de revient réel (achat +
+  /// dépenses imputées, voir [LoadingsRepository.getRentabilite]).
+  IntColumn get chargementOrigineId =>
+      integer().nullable().references(Loadings, #id)();
+
+  /// Poids unitaire (kg), optionnel — utilisé uniquement pour la
+  /// répartition des dépenses partagées d'un chargement "par poids".
+  RealColumn get poids => real().nullable()();
 }
 
 /// Table de répartition du stock par magasin.

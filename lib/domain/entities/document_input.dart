@@ -15,6 +15,10 @@ class DocumentInput {
   final String? createdByNom;
   final int? parentDocumentId;
 
+  /// Commercial (employé) à qui attribuer la commission de cette vente,
+  /// choisi librement à la vente — indépendant de [createdById].
+  final int? vendeurEmployeeId;
+
   const DocumentInput({
     required this.type,
     required this.storeId,
@@ -28,6 +32,7 @@ class DocumentInput {
     this.createdById,
     this.createdByNom,
     this.parentDocumentId,
+    this.vendeurEmployeeId,
   });
 }
 

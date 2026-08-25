@@ -17,8 +17,11 @@ class PurchasesDao extends DatabaseAccessor<AppDatabase>
       (select(purchases)..where((p) => p.id.equals(id))).getSingleOrNull();
 
   /// Remplace entièrement les lignes d'un achat et met à jour son
-  /// en-tête en une seule transaction atomique.
-  Future<void> updatePurchaseWithItems(
+  /// en-tête en une seule transaction atomique. Retourne les ids des
+  /// nouvelles lignes créées, dans le même ordre que [nouvellesLignes]
+  /// (utilisé pour rattacher précisément chaque lot de stock à sa ligne
+  /// d'achat, voir StockLots.purchaseItemId).
+  Future<List<int>> updatePurchaseWithItems(
     int purchaseId,
     PurchasesCompanion header,
     List<PurchaseItemsCompanion> nouvellesLignes,
@@ -27,12 +30,15 @@ class PurchasesDao extends DatabaseAccessor<AppDatabase>
       await (delete(purchaseItems)
             ..where((i) => i.purchaseId.equals(purchaseId)))
           .go();
+      final itemIds = <int>[];
       for (final item in nouvellesLignes) {
-        await into(purchaseItems)
+        final itemId = await into(purchaseItems)
             .insert(item.copyWith(purchaseId: Value(purchaseId)));
+        itemIds.add(itemId);
       }
       await (update(purchases)..where((p) => p.id.equals(purchaseId)))
           .write(header);
+      return itemIds;
     });
   }
 
@@ -53,18 +59,23 @@ class PurchasesDao extends DatabaseAccessor<AppDatabase>
     return (select(purchases)..where((p) => p.numero.like(likeQuery))).get();
   }
 
-  /// Crée un achat avec ses lignes en une seule transaction.
-  Future<int> createPurchaseWithItems(
+  /// Crée un achat avec ses lignes en une seule transaction. Retourne
+  /// l'id de l'achat et les ids des lignes créées, dans le même ordre
+  /// que [items] (utilisé pour rattacher précisément chaque lot de
+  /// stock à sa ligne d'achat, voir StockLots.purchaseItemId).
+  Future<(int purchaseId, List<int> itemIds)> createPurchaseWithItems(
     PurchasesCompanion purchase,
     List<PurchaseItemsCompanion> items,
   ) {
     return transaction(() async {
       final purchaseId = await into(purchases).insert(purchase);
+      final itemIds = <int>[];
       for (final item in items) {
-        await into(purchaseItems)
+        final itemId = await into(purchaseItems)
             .insert(item.copyWith(purchaseId: Value(purchaseId)));
+        itemIds.add(itemId);
       }
-      return purchaseId;
+      return (purchaseId, itemIds);
     });
   }
 
