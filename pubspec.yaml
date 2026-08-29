@@ -1,7 +1,7 @@
 name: mali_pneus
 description: "Logiciel de gestion commerciale desktop pour commerçants - Mali"
 publish_to: 'none'
-version: 3.0.0+1
+version: 3.1.0+2
 
 environment:
   sdk: '>=3.4.0 <4.0.0'

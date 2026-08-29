@@ -14,7 +14,7 @@ class AppIdentity {
 
   static const String nomApp = 'MaliPneus';
   static const String nomCourt = 'MaliPneus';
-  static const String version = '3.0.0';
+  static const String version = '3.1.0';
   static const int schemaVersion = 13;
   static const String description =
       'Solution de gestion commerciale conçue pour les vendeurs de pneus '

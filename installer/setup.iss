@@ -11,7 +11,7 @@
 
 #define MyAppName "MaliPneus"
 #define MyAppShortName "MaliPneus"
-#define MyAppVersion "3.0.0"
+#define MyAppVersion "3.1.0"
 #define MyAppPublisher "MALI_CODE CENTER"
 #define MyAppExeName "mali_pneus.exe"
 ; Chemin vers le dossier généré par `flutter build windows`, relatif
