@@ -630,7 +630,8 @@ class _PurchaseFormScreenState extends ConsumerState<PurchaseFormScreen> {
                                   const DropdownMenuItem<int?>(
                                       value: null, child: Text('Aucun')),
                                   ...loadings.map((l) => DropdownMenuItem(
-                                      value: l.id, child: Text(l.numero))),
+                                      value: l.id,
+                                      child: Text(l.nomAffiche))),
                                 ],
                                 onChanged: (v) {
                                   setState(() => _chargementId = v);

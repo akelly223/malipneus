@@ -62,3 +62,25 @@ final allSettlementsProvider =
   final repo = ref.watch(commissionsRepositoryProvider);
   return repo.getAllSettlements();
 });
+
+/// Détail vente par vente (client, date, article, montant) des
+/// commissions dues et non réglées — pour l'affichage détaillé et
+/// l'export PDF de preuve avant règlement.
+final commissionsDetailDuesProvider = FutureProvider.autoDispose
+    .family<List<CommissionLigneDetailEntity>, PeriodeParams>(
+        (ref, params) async {
+  final repo = ref.watch(commissionsRepositoryProvider);
+  return repo.getDetailCommissionsDues(
+    employeeId: params.employeeId,
+    debut: params.debut,
+    fin: params.fin,
+  );
+});
+
+/// Détail vente par vente d'un règlement déjà effectué — pour l'export
+/// PDF du reçu de paiement remis au commercial.
+final settlementDetailProvider = FutureProvider.autoDispose
+    .family<List<CommissionLigneDetailEntity>, int>((ref, settlementId) async {
+  final repo = ref.watch(commissionsRepositoryProvider);
+  return repo.getDetailSettlement(settlementId);
+});

@@ -2,7 +2,7 @@
 
 Ce document te donne :
 1. **Les données à saisir** (fournisseurs, articles, clients, personnel, commerciaux) pour peupler l'app avant ta démo.
-2. **Un scénario de test pas à pas** qui active tous les modules (Articles, Chargements, Dépenses, Personnel, Paie, Commissions) avec des résultats attendus précis, pour que tu puisses vérifier que tout fonctionne — y compris le **coût de revient réel par article** (la fonctionnalité phare de cette version).
+2. **Un scénario de test pas à pas** qui active tous les modules (Articles, Chargements, Dépenses, Personnel, Paie, Commissions, Promotions) avec des résultats attendus précis, pour que tu puisses vérifier que tout fonctionne — y compris le **coût de revient réel par article** (la fonctionnalité phare de cette version).
 3. **Un script de pitch** — les phrases et l'ordre de démonstration qui mettent en valeur ce que tu viens de faire construire, pensé pour convaincre un patron de commerce de pneus.
 
 Tout est en FCFA, avec des noms et données réalistes pour le Mali. Suis l'ordre des sections : certaines données dépendent des précédentes (ex : un achat a besoin d'un article et d'un fournisseur déjà créés).
@@ -16,6 +16,9 @@ Tout est en FCFA, avec des noms et données réalistes pour le Mali. Suis l'ordr
 - **Tableau détail par article** sur la fiche chargement (Qté / Achat·U / Part dépenses·U / Revient·U / Vente·U / Marge·U / Marge totale), en plus de la synthèse globale.
 - **Clôturer / Réouvrir un chargement** : une fois clôturé, son coût de revient reste figé même si une dépense arrive en retard.
 - Le menu **"Pneus"** s'appelle désormais **"Articles"** dans toute l'interface (le vocabulaire pneu — dimension, marque, poids... — reste bien sûr disponible sur la fiche article).
+- **Simulateur de coût de revient** (bouton "Simulateur" dans Chargements) : estimer AVANT d'acheter le coût de revient réel et la marge par pneu, à partir de prix/quantités hypothétiques — rien n'est enregistré. Tape une dimension (ex : "55R16") pour préremplir une ligne depuis un pneu déjà au catalogue (prix d'achat, poids, prix de vente), puis ajuste librement.
+- **Export PDF de preuve** pour les commissions (relevé dû ou reçu de règlement, avec le détail client/date/article) et pour les bulletins de paie.
+- **Promotions commerciales** (nouveau module) : remise (% ou montant fixe) sur un ou plusieurs pneus, active automatiquement sur une période donnée — pas besoin d'y penser à la vente, la remise se préremplit toute seule sur la ligne. Chaque promotion a sa propre **fiche de performance** (pneus vendus, chiffre d'affaires réalisé, et surtout **combien de marge la remise a réellement coûté**) mesurée uniquement sur les ventes facturées, jamais une estimation.
 
 ---
 
@@ -68,15 +71,16 @@ Le code (`ART-XXXX`) se génère automatiquement, tu n'as qu'à remplir le nom e
 
 ### 1.5 Personnel — 3 commerciaux (module Personnel + Commissions)
 
-Crée-les d'abord comme employés (poste **Commercial**), puis ouvre chaque fiche pour lui définir sa commission dans la section "Configuration commerciale".
+Crée-les d'abord comme employés (poste **Commercial**), puis ouvre chaque fiche pour lui définir sa commission dans la section "Configuration commerciale". **Laisse le champ "Salaire de base" à 0 F** : ces 3 commerciaux ne touchent aucun salaire fixe, ils sont payés uniquement à la commission (contrairement aux 2 employés non-commerciaux de la section 1.4).
 
 | Nom Prénom | Date d'embauche | Contrat | Salaire de base | Type de commission | Valeur |
 |---|---|---:|---:|---|---:|
-| Diallo Sékou | 01/06/2025 | CDI | 75 000 F | Fixe | 1 000 F / article |
-| Doumbia Awa | 10/02/2025 | CDI | 75 000 F | Pourcentage | 10 % |
-| Traoré Boubacar | 20/09/2025 | Journalier | 60 000 F | Fixe | 800 F / article |
+| Diallo Sékou | 01/06/2025 | CDI | 0 F | Fixe | 1 000 F / article |
+| Doumbia Awa | 10/02/2025 | CDI | 0 F | Pourcentage | 10 % |
+| Traoré Boubacar | 20/09/2025 | Journalier | 0 F | Fixe | 800 F / article |
 
 > On a volontairement mis **un commercial en pourcentage** et **deux en montant fixe** : ça te permet de montrer les deux modes de commission au client dans la même démo.
+> "Créer comme employé" sert uniquement à avoir une fiche Personnel (nom, poste, date d'embauche) à laquelle rattacher sa configuration de commission — ça n'implique pas de salaire fixe. Le module Personnel gère aussi bien un employé classique (salaire) qu'un commercial payé 100 % à la commission (salaire à 0).
 
 ---
 
@@ -149,7 +153,7 @@ Suis ces étapes dans l'ordre. Chaque étape indique où cliquer et **ce que tu 
 ### Étape 6 — Génération de la paie
 
 1. **Paie → Nouvelle période de paie.** Libellé "Août 2026", du 01/08/2026 au 31/08/2026.
-2. Clique **Générer les bulletins** : un bulletin est créé pour chaque employé actif (Moussa, Fatoumata, Sékou, Awa, Boubacar).
+2. Clique **Générer les bulletins** : un bulletin est créé pour chaque employé actif (Moussa, Fatoumata, Sékou, Awa, Boubacar). Les bulletins de Sékou, Awa et Boubacar afficheront **0 F** (pas de salaire de base) — normal, ils sont payés séparément via **Commissions**, pas via la paie.
 3. Ouvre le bulletin de **Moussa Keita** :
    - Salaire de base 100 000 F
    - Retenue absence : 100 000 ÷ 30 × 1 jour = **3 333 F**
@@ -180,6 +184,92 @@ Suis ces étapes dans l'ordre. Chaque étape indique où cliquer et **ce que tu 
    - Salaires payés (96 667 F si tu as réglé Moussa)
    - Commissions réglées (5 000 + 36 000 = 41 000 F)
    - Pertes (5 unités)
+
+### Étape 9 — Promotion commerciale (nouveau module) : checklist de bugs
+
+**Objectif de cette étape : chasser les bugs, pas faire un pitch.** Chaque point est marqué **⚠ BUG SI...** pour que tu saches exactement quoi signaler si le résultat ne correspond pas.
+
+**Prérequis minimal** (si tu veux tester CE module en isolation, sans refaire les étapes 1 à 8) : Fournisseurs (1.1) et au moins les 2 premiers articles de la section 1.2 doivent exister (*Pneu Tourisme 175/70R13* et *185/65R14*). Puis un stock simple, sans passer par un chargement :
+
+1. **Achats → Nouvel achat fournisseur.** Fournisseur *Sino Tires Import*, PAS de chargement rattaché cette fois. Deux lignes :
+
+   | Article | Quantité | Prix d'achat unitaire |
+   |---|---:|---:|
+   | Pneu Tourisme 175/70R13 | 30 | 16 000 F |
+   | Pneu Tourisme 185/65R14 | 20 | 18 000 F |
+
+   Valide (réception immédiate) → stocks 30 et 20.
+
+#### 9.1 — Créer la promotion
+
+**Promotions → Nouvelle promotion.**
+- Nom : *"Solde weekend"*
+- Type : Pourcentage — Valeur : **10**
+- Début : aujourd'hui — Fin : dans 2 jours
+- Actif : oui
+- Pneus concernés : ajoute **les deux** — *Pneu Tourisme 175/70R13* ET *185/65R14* (teste bien qu'une promo peut couvrir plusieurs pneus à la fois, pas un seul).
+
+→ Vérifie que la promo apparaît dans la liste avec le badge **"Active"** (pas "Planifiée" ni "Expirée").
+**⚠ BUG SI :** le badge affiche autre chose que "Active", ou si un seul des deux pneus a été enregistré (relis la fiche après enregistrement pour confirmer les deux).
+
+#### 9.2 — La remise doit se préremplir toute seule à la vente
+
+**Ventes → Nouvelle vente.** Client *Ibrahim Coulibaly*.
+- Ajoute *Pneu Tourisme 175/70R13* × **4**.
+- Ajoute *Pneu Tourisme 185/65R14* × **2**.
+
+| Ligne | Prix HT (doit rester normal) | Remise % (doit se préremplir seule) | Total HT attendu |
+|---|---:|---:|---:|
+| 175/70R13 × 4 | 24 000 | **10** | 86 400 |
+| 185/65R14 × 2 | 26 000 | **10** | 46 800 |
+
+Valide, paiement complet.
+
+**⚠ BUG SI :** la colonne "Remise %" affiche 0 après l'ajout (il faudrait alors la taper à la main — la promo automatique ne fonctionnerait pas), ou si le "Prix HT" a lui-même été modifié au lieu de rester le prix normal.
+
+#### 9.3 — Une remise manuelle ne doit jamais se faire passer pour une promo
+
+Fais une **deuxième vente**, avec un article qui n'est PAS dans la promotion (ex : *Pneu Tourisme 195/65R15*), et modifie sa remise ligne **manuellement à 10%** (le même chiffre que la promo, exprès, par coïncidence). Valide.
+
+Ce point ne se vérifie pas à l'écran tout de suite — il sert à confirmer au point 9.5 que cette vente-là n'est **pas** comptée dans la performance de "Solde weekend", alors même que le pourcentage est identique.
+
+#### 9.4 — Le PDF de facture
+
+Ouvre le PDF de la vente de 9.2 → la remise de 10% doit apparaître normalement sur chaque ligne concernée, exactement comme n'importe quelle remise (rien de spécial "PROMO" écrit dessus — c'est voulu, le client final ne doit rien voir de différent).
+
+**⚠ BUG SI :** la remise n'apparaît pas sur le PDF, ou si le total du PDF ne correspond pas aux montants du tableau de 9.2.
+
+#### 9.5 — Fiche de performance de la promotion
+
+**Promotions → clique sur "Solde weekend"** (ouvre la fiche détail). Section **Performance** :
+
+| Indicateur | Valeur attendue |
+|---|---:|
+| Nombre de ventes | **1** (pas 2 — la vente manuelle de 9.3 ne doit JAMAIS compter) |
+| Pneus vendus | **6** (4 + 2) |
+| Chiffre d'affaires réalisé | **133 200 F** (86 400 + 46 800) |
+| Remise accordée (manque à gagner) | **14 800 F** → (4×24 000×10%) + (2×26 000×10%) = 9 600 + 5 200 |
+| Marge qui aurait été réalisée sans promo | **48 000 F** → 4×(24 000−16 000) + 2×(26 000−18 000) = 32 000 + 16 000 |
+| Marge réellement réalisée | **33 200 F** (48 000 − 14 800) |
+| Part de marge perdue | **≈ 30,8 %** (14 800 ÷ 48 000) |
+
+**⚠ BUG SI :** "Nombre de ventes" affiche 2 (signe que la vente manuelle de 9.3 a été comptée à tort — c'est le bug le plus important à guetter sur ce module), ou si un seul des montants ne correspond pas exactement au calcul ci-dessus.
+
+#### 9.6 — Dates et interrupteur : la remise doit s'arrêter net
+
+- Modifie la promo : mets la date de fin à **hier** → le badge doit passer à **"Expirée"**.
+- Fais une nouvelle petite vente avec *175/70R13* → la remise **ne doit plus** se préremplir (reste à 0).
+- Remets la date de fin à demain, mais **désactive** l'interrupteur "Promotion active" → le badge passe à **"Inactive"**, et la remise ne doit toujours pas s'appliquer.
+- Réactive l'interrupteur → le badge repasse à "Active", et la remise doit revenir sur une nouvelle vente.
+
+**⚠ BUG SI :** la remise continue à se préremplir alors que la promo est expirée ou désactivée — c'est le deuxième bug le plus important à guetter (une promo "fantôme" qui continue à réduire les prix serait un vrai problème financier).
+
+#### 9.7 — Modifier et supprimer
+
+- Modifie "Solde weekend" pour **retirer** *185/65R14* de la sélection (garde seulement *175/70R13*) → enregistre, rouvre la fiche, vérifie qu'un seul pneu est listé désormais.
+- **Supprime** la promotion → vérifie qu'elle disparaît bien de la liste **Promotions**, et surtout que la vente de 9.2 reste **inchangée** dans l'historique des ventes (le montant facturé au client ne doit jamais bouger rétroactivement, même si la promotion qui l'a généré est supprimée).
+
+**⚠ BUG SI :** la suppression de la promotion modifie ou fait disparaître une vente déjà enregistrée.
 
 ---
 
@@ -217,6 +307,12 @@ Voici comment enchaîner la démo pour raconter une histoire, pas juste cliquer 
 ### Bloc 6 — Tableau de bord (Étape 8)
 - Termine sur le dashboard : *"Et là, en un coup d'œil, vous avez la vision complète : ce que vous avez vendu, ce que vous avez dépensé, ce que vous avez payé en salaires et en commissions, et vos pertes. Cette vue, avant, il fallait la reconstituer à la main, ou vous ne l'aviez tout simplement pas."*
 
+### Bloc 7 — Promotions commerciales (Étape 9)
+- Crée une promotion en direct sur un ou deux pneus, avec une date de fin proche.
+- Fais une vente : *"Regardez, je n'ai rien tapé — la remise s'est appliquée toute seule parce que le pneu est en promotion aujourd'hui."*
+- Ouvre la fiche de performance de la promotion : *"Et là, le vrai intérêt pour vous : vous voyez exactement combien de pneus sont partis en promo, et surtout combien ça vous a coûté en marge — pas en chiffre d'affaires, en VRAIE marge, calculée sur votre coût de revient réel. Une promotion à 10% qui vous fait perdre 30% de votre marge, mieux vaut le savoir tout de suite qu'à la fin du mois."*
+- Montre que la promo s'arrête d'elle-même après sa date de fin : *"Vous n'avez rien à faire pour la désactiver, et si un vendeur applique une remise à la main sur un autre article, elle n'est jamais confondue avec une vraie promotion dans vos statistiques."*
+
 ### Clôture
 > *"Tout ce que vous avez vu tourne sur votre propre ordinateur, avec vos propres données, sans dépendre d'Internet. Et rien de ce que je vous ai montré aujourd'hui n'a cassé les fonctionnalités que vous utilisiez déjà — vos ventes, vos achats, votre stock fonctionnent exactement comme avant, en mieux."*
 
@@ -235,3 +331,4 @@ Voici comment enchaîner la démo pour raconter une histoire, pas juste cliquer 
 9. Période de paie + génération + règlement (Étape 6)
 10. Perte de stock — vérifie que le détail par article ne bouge pas (Étape 7)
 11. Dashboard (Étape 8)
+12. Promotion — création, vente avec remise auto, fiche performance, dates/interrupteur, modif/suppression (Étape 9) — pour tester CE module seul, prérequis minimal : 1.1 + les 2 premiers articles de 1.2 + un achat simple (voir en tête d'Étape 9)

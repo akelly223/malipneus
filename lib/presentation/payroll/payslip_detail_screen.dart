@@ -7,10 +7,12 @@ import '../../app/providers/repository_providers.dart';
 import '../../app/providers/session_provider.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/services/payslip_pdf_service.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/deferred_set_state.dart';
 import '../../domain/entities/payroll.dart';
+import '../settings/providers/settings_provider.dart';
 import 'providers/payroll_provider.dart';
 
 class PayslipDetailScreen extends ConsumerWidget {
@@ -22,7 +24,21 @@ class PayslipDetailScreen extends ConsumerWidget {
     final payslipAsync = ref.watch(payslipByIdProvider(payslipId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Bulletin de paie')),
+      appBar: AppBar(
+        title: const Text('Bulletin de paie'),
+        actions: [
+          payslipAsync.maybeWhen(
+            data: (payslip) => payslip == null
+                ? const SizedBox.shrink()
+                : IconButton(
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    tooltip: 'Exporter le bulletin en PDF',
+                    onPressed: () => _exporterPdf(context, ref, payslip),
+                  ),
+            orElse: () => const SizedBox.shrink(),
+          ),
+        ],
+      ),
       body: payslipAsync.when(
         data: (payslip) {
           if (payslip == null) {
@@ -46,6 +62,31 @@ class PayslipDetailScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Erreur: $e')),
       ),
     );
+  }
+
+  Future<void> _exporterPdf(
+      BuildContext context, WidgetRef ref, PayslipEntity payslip) async {
+    try {
+      final periode = await ref
+          .read(payrollPeriodByIdProvider(payslip.payrollPeriodId).future);
+      final paiements =
+          await ref.read(payslipPaymentsProvider(payslip.id).future);
+      final settings = await ref.read(appSettingsProvider.future);
+      if (periode == null) {
+        throw Exception('Période de paie introuvable.');
+      }
+      await PayslipPdfService.print(
+        payslip: payslip,
+        periode: periode,
+        paiements: paiements,
+        settings: settings,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erreur export PDF : $e')));
+      }
+    }
   }
 }
 

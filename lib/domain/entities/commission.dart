@@ -55,6 +55,36 @@ class CommissionsDuesEntity {
   });
 }
 
+/// Une ligne de vente commissionnée, avec le détail nécessaire pour
+/// justifier une commission (client, date, article, montant) — sert
+/// à la fois à l'affichage "détail des ventes" et à l'export PDF de
+/// preuve (dû ou déjà réglé).
+class CommissionLigneDetailEntity {
+  final int documentLineId;
+  final int documentId;
+  final String documentNumero;
+  final DateTime dateDocument;
+
+  /// Null pour une vente comptoir sans client enregistré.
+  final String? clientNom;
+  final String articleNom;
+  final double quantite;
+  final double totalLigneHt;
+  final double commissionMontant;
+
+  const CommissionLigneDetailEntity({
+    required this.documentLineId,
+    required this.documentId,
+    required this.documentNumero,
+    required this.dateDocument,
+    this.clientNom,
+    required this.articleNom,
+    required this.quantite,
+    required this.totalLigneHt,
+    required this.commissionMontant,
+  });
+}
+
 /// Règlement effectué de commissions commerciales (historique immuable).
 class CommissionSettlementEntity {
   final int id;

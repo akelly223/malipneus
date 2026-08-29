@@ -12812,6 +12812,434 @@ class CommissionSettlementsCompanion
   }
 }
 
+class $PromotionsTable extends Promotions
+    with TableInfo<$PromotionsTable, Promotion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PromotionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nomMeta = const VerificationMeta('nom');
+  @override
+  late final GeneratedColumn<String> nom = GeneratedColumn<String>(
+      'nom', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 150),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _typeRemiseMeta =
+      const VerificationMeta('typeRemise');
+  @override
+  late final GeneratedColumn<String> typeRemise = GeneratedColumn<String>(
+      'type_remise', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('pourcentage'));
+  static const VerificationMeta _valeurMeta = const VerificationMeta('valeur');
+  @override
+  late final GeneratedColumn<double> valeur = GeneratedColumn<double>(
+      'valeur', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _dateDebutMeta =
+      const VerificationMeta('dateDebut');
+  @override
+  late final GeneratedColumn<DateTime> dateDebut = GeneratedColumn<DateTime>(
+      'date_debut', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _dateFinMeta =
+      const VerificationMeta('dateFin');
+  @override
+  late final GeneratedColumn<DateTime> dateFin = GeneratedColumn<DateTime>(
+      'date_fin', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _actifMeta = const VerificationMeta('actif');
+  @override
+  late final GeneratedColumn<bool> actif = GeneratedColumn<bool>(
+      'actif', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("actif" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _dateCreationMeta =
+      const VerificationMeta('dateCreation');
+  @override
+  late final GeneratedColumn<DateTime> dateCreation = GeneratedColumn<DateTime>(
+      'date_creation', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, nom, typeRemise, valeur, dateDebut, dateFin, actif, dateCreation];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'promotions';
+  @override
+  VerificationContext validateIntegrity(Insertable<Promotion> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('nom')) {
+      context.handle(
+          _nomMeta, nom.isAcceptableOrUnknown(data['nom']!, _nomMeta));
+    } else if (isInserting) {
+      context.missing(_nomMeta);
+    }
+    if (data.containsKey('type_remise')) {
+      context.handle(
+          _typeRemiseMeta,
+          typeRemise.isAcceptableOrUnknown(
+              data['type_remise']!, _typeRemiseMeta));
+    }
+    if (data.containsKey('valeur')) {
+      context.handle(_valeurMeta,
+          valeur.isAcceptableOrUnknown(data['valeur']!, _valeurMeta));
+    } else if (isInserting) {
+      context.missing(_valeurMeta);
+    }
+    if (data.containsKey('date_debut')) {
+      context.handle(_dateDebutMeta,
+          dateDebut.isAcceptableOrUnknown(data['date_debut']!, _dateDebutMeta));
+    } else if (isInserting) {
+      context.missing(_dateDebutMeta);
+    }
+    if (data.containsKey('date_fin')) {
+      context.handle(_dateFinMeta,
+          dateFin.isAcceptableOrUnknown(data['date_fin']!, _dateFinMeta));
+    } else if (isInserting) {
+      context.missing(_dateFinMeta);
+    }
+    if (data.containsKey('actif')) {
+      context.handle(
+          _actifMeta, actif.isAcceptableOrUnknown(data['actif']!, _actifMeta));
+    }
+    if (data.containsKey('date_creation')) {
+      context.handle(
+          _dateCreationMeta,
+          dateCreation.isAcceptableOrUnknown(
+              data['date_creation']!, _dateCreationMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Promotion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Promotion(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      nom: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}nom'])!,
+      typeRemise: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type_remise'])!,
+      valeur: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}valeur'])!,
+      dateDebut: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_debut'])!,
+      dateFin: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_fin'])!,
+      actif: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}actif'])!,
+      dateCreation: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}date_creation'])!,
+    );
+  }
+
+  @override
+  $PromotionsTable createAlias(String alias) {
+    return $PromotionsTable(attachedDatabase, alias);
+  }
+}
+
+class Promotion extends DataClass implements Insertable<Promotion> {
+  final int id;
+  final String nom;
+
+  /// 'pourcentage' ou 'montant' — voir [PromotionEntity.type].
+  final String typeRemise;
+
+  /// Valeur de la remise : un pourcentage (0-100) si [typeRemise] vaut
+  /// 'pourcentage', ou un montant en FCFA sinon.
+  final double valeur;
+  final DateTime dateDebut;
+
+  /// Fin de la période, incluse (normalisée à 23:59:59 le jour choisi
+  /// par le formulaire pour couvrir toute la journée de fin).
+  final DateTime dateFin;
+
+  /// Interrupteur manuel indépendant des dates — permet de suspendre une
+  /// promotion sans en modifier la période planifiée.
+  final bool actif;
+  final DateTime dateCreation;
+  const Promotion(
+      {required this.id,
+      required this.nom,
+      required this.typeRemise,
+      required this.valeur,
+      required this.dateDebut,
+      required this.dateFin,
+      required this.actif,
+      required this.dateCreation});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['nom'] = Variable<String>(nom);
+    map['type_remise'] = Variable<String>(typeRemise);
+    map['valeur'] = Variable<double>(valeur);
+    map['date_debut'] = Variable<DateTime>(dateDebut);
+    map['date_fin'] = Variable<DateTime>(dateFin);
+    map['actif'] = Variable<bool>(actif);
+    map['date_creation'] = Variable<DateTime>(dateCreation);
+    return map;
+  }
+
+  PromotionsCompanion toCompanion(bool nullToAbsent) {
+    return PromotionsCompanion(
+      id: Value(id),
+      nom: Value(nom),
+      typeRemise: Value(typeRemise),
+      valeur: Value(valeur),
+      dateDebut: Value(dateDebut),
+      dateFin: Value(dateFin),
+      actif: Value(actif),
+      dateCreation: Value(dateCreation),
+    );
+  }
+
+  factory Promotion.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Promotion(
+      id: serializer.fromJson<int>(json['id']),
+      nom: serializer.fromJson<String>(json['nom']),
+      typeRemise: serializer.fromJson<String>(json['typeRemise']),
+      valeur: serializer.fromJson<double>(json['valeur']),
+      dateDebut: serializer.fromJson<DateTime>(json['dateDebut']),
+      dateFin: serializer.fromJson<DateTime>(json['dateFin']),
+      actif: serializer.fromJson<bool>(json['actif']),
+      dateCreation: serializer.fromJson<DateTime>(json['dateCreation']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'nom': serializer.toJson<String>(nom),
+      'typeRemise': serializer.toJson<String>(typeRemise),
+      'valeur': serializer.toJson<double>(valeur),
+      'dateDebut': serializer.toJson<DateTime>(dateDebut),
+      'dateFin': serializer.toJson<DateTime>(dateFin),
+      'actif': serializer.toJson<bool>(actif),
+      'dateCreation': serializer.toJson<DateTime>(dateCreation),
+    };
+  }
+
+  Promotion copyWith(
+          {int? id,
+          String? nom,
+          String? typeRemise,
+          double? valeur,
+          DateTime? dateDebut,
+          DateTime? dateFin,
+          bool? actif,
+          DateTime? dateCreation}) =>
+      Promotion(
+        id: id ?? this.id,
+        nom: nom ?? this.nom,
+        typeRemise: typeRemise ?? this.typeRemise,
+        valeur: valeur ?? this.valeur,
+        dateDebut: dateDebut ?? this.dateDebut,
+        dateFin: dateFin ?? this.dateFin,
+        actif: actif ?? this.actif,
+        dateCreation: dateCreation ?? this.dateCreation,
+      );
+  Promotion copyWithCompanion(PromotionsCompanion data) {
+    return Promotion(
+      id: data.id.present ? data.id.value : this.id,
+      nom: data.nom.present ? data.nom.value : this.nom,
+      typeRemise:
+          data.typeRemise.present ? data.typeRemise.value : this.typeRemise,
+      valeur: data.valeur.present ? data.valeur.value : this.valeur,
+      dateDebut: data.dateDebut.present ? data.dateDebut.value : this.dateDebut,
+      dateFin: data.dateFin.present ? data.dateFin.value : this.dateFin,
+      actif: data.actif.present ? data.actif.value : this.actif,
+      dateCreation: data.dateCreation.present
+          ? data.dateCreation.value
+          : this.dateCreation,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Promotion(')
+          ..write('id: $id, ')
+          ..write('nom: $nom, ')
+          ..write('typeRemise: $typeRemise, ')
+          ..write('valeur: $valeur, ')
+          ..write('dateDebut: $dateDebut, ')
+          ..write('dateFin: $dateFin, ')
+          ..write('actif: $actif, ')
+          ..write('dateCreation: $dateCreation')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, nom, typeRemise, valeur, dateDebut, dateFin, actif, dateCreation);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Promotion &&
+          other.id == this.id &&
+          other.nom == this.nom &&
+          other.typeRemise == this.typeRemise &&
+          other.valeur == this.valeur &&
+          other.dateDebut == this.dateDebut &&
+          other.dateFin == this.dateFin &&
+          other.actif == this.actif &&
+          other.dateCreation == this.dateCreation);
+}
+
+class PromotionsCompanion extends UpdateCompanion<Promotion> {
+  final Value<int> id;
+  final Value<String> nom;
+  final Value<String> typeRemise;
+  final Value<double> valeur;
+  final Value<DateTime> dateDebut;
+  final Value<DateTime> dateFin;
+  final Value<bool> actif;
+  final Value<DateTime> dateCreation;
+  const PromotionsCompanion({
+    this.id = const Value.absent(),
+    this.nom = const Value.absent(),
+    this.typeRemise = const Value.absent(),
+    this.valeur = const Value.absent(),
+    this.dateDebut = const Value.absent(),
+    this.dateFin = const Value.absent(),
+    this.actif = const Value.absent(),
+    this.dateCreation = const Value.absent(),
+  });
+  PromotionsCompanion.insert({
+    this.id = const Value.absent(),
+    required String nom,
+    this.typeRemise = const Value.absent(),
+    required double valeur,
+    required DateTime dateDebut,
+    required DateTime dateFin,
+    this.actif = const Value.absent(),
+    this.dateCreation = const Value.absent(),
+  })  : nom = Value(nom),
+        valeur = Value(valeur),
+        dateDebut = Value(dateDebut),
+        dateFin = Value(dateFin);
+  static Insertable<Promotion> custom({
+    Expression<int>? id,
+    Expression<String>? nom,
+    Expression<String>? typeRemise,
+    Expression<double>? valeur,
+    Expression<DateTime>? dateDebut,
+    Expression<DateTime>? dateFin,
+    Expression<bool>? actif,
+    Expression<DateTime>? dateCreation,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (nom != null) 'nom': nom,
+      if (typeRemise != null) 'type_remise': typeRemise,
+      if (valeur != null) 'valeur': valeur,
+      if (dateDebut != null) 'date_debut': dateDebut,
+      if (dateFin != null) 'date_fin': dateFin,
+      if (actif != null) 'actif': actif,
+      if (dateCreation != null) 'date_creation': dateCreation,
+    });
+  }
+
+  PromotionsCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? nom,
+      Value<String>? typeRemise,
+      Value<double>? valeur,
+      Value<DateTime>? dateDebut,
+      Value<DateTime>? dateFin,
+      Value<bool>? actif,
+      Value<DateTime>? dateCreation}) {
+    return PromotionsCompanion(
+      id: id ?? this.id,
+      nom: nom ?? this.nom,
+      typeRemise: typeRemise ?? this.typeRemise,
+      valeur: valeur ?? this.valeur,
+      dateDebut: dateDebut ?? this.dateDebut,
+      dateFin: dateFin ?? this.dateFin,
+      actif: actif ?? this.actif,
+      dateCreation: dateCreation ?? this.dateCreation,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (nom.present) {
+      map['nom'] = Variable<String>(nom.value);
+    }
+    if (typeRemise.present) {
+      map['type_remise'] = Variable<String>(typeRemise.value);
+    }
+    if (valeur.present) {
+      map['valeur'] = Variable<double>(valeur.value);
+    }
+    if (dateDebut.present) {
+      map['date_debut'] = Variable<DateTime>(dateDebut.value);
+    }
+    if (dateFin.present) {
+      map['date_fin'] = Variable<DateTime>(dateFin.value);
+    }
+    if (actif.present) {
+      map['actif'] = Variable<bool>(actif.value);
+    }
+    if (dateCreation.present) {
+      map['date_creation'] = Variable<DateTime>(dateCreation.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PromotionsCompanion(')
+          ..write('id: $id, ')
+          ..write('nom: $nom, ')
+          ..write('typeRemise: $typeRemise, ')
+          ..write('valeur: $valeur, ')
+          ..write('dateDebut: $dateDebut, ')
+          ..write('dateFin: $dateFin, ')
+          ..write('actif: $actif, ')
+          ..write('dateCreation: $dateCreation')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $DocumentLinesTable extends DocumentLines
     with TableInfo<$DocumentLinesTable, DocumentLine> {
   @override
@@ -12950,6 +13378,15 @@ class $DocumentLinesTable extends DocumentLines
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES commission_settlements (id)'));
+  static const VerificationMeta _promotionIdMeta =
+      const VerificationMeta('promotionId');
+  @override
+  late final GeneratedColumn<int> promotionId = GeneratedColumn<int>(
+      'promotion_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES promotions (id)'));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -12968,7 +13405,8 @@ class $DocumentLinesTable extends DocumentLines
         notesLigne,
         commissionUnitaire,
         commissionMontant,
-        commissionSettlementId
+        commissionSettlementId,
+        promotionId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -13079,6 +13517,12 @@ class $DocumentLinesTable extends DocumentLines
           commissionSettlementId.isAcceptableOrUnknown(
               data['commission_settlement_id']!, _commissionSettlementIdMeta));
     }
+    if (data.containsKey('promotion_id')) {
+      context.handle(
+          _promotionIdMeta,
+          promotionId.isAcceptableOrUnknown(
+              data['promotion_id']!, _promotionIdMeta));
+    }
     return context;
   }
 
@@ -13122,6 +13566,8 @@ class $DocumentLinesTable extends DocumentLines
           DriftSqlType.double, data['${effectivePrefix}commission_montant']),
       commissionSettlementId: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}commission_settlement_id']),
+      promotionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}promotion_id']),
     );
   }
 
@@ -13161,6 +13607,14 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
   /// Renseigné une seule fois, au règlement de la commission — empêche
   /// tout double paiement par construction (voir [CommissionSettlements]).
   final int? commissionSettlementId;
+
+  /// Promotion active au moment de la saisie de cette ligne, si son
+  /// prix a été préremplié automatiquement par une promotion (voir
+  /// [DocumentLinesEditor]). Snapshot figé — une modification ou
+  /// suppression ultérieure de la promotion n'affecte pas les ventes
+  /// déjà enregistrées. Sert au calcul de performance d'une promotion
+  /// (quantité vendue, chiffre d'affaires, marge perdue).
+  final int? promotionId;
   const DocumentLine(
       {required this.id,
       required this.documentId,
@@ -13178,7 +13632,8 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
       this.notesLigne,
       this.commissionUnitaire,
       this.commissionMontant,
-      this.commissionSettlementId});
+      this.commissionSettlementId,
+      this.promotionId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -13206,6 +13661,9 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
     }
     if (!nullToAbsent || commissionSettlementId != null) {
       map['commission_settlement_id'] = Variable<int>(commissionSettlementId);
+    }
+    if (!nullToAbsent || promotionId != null) {
+      map['promotion_id'] = Variable<int>(promotionId);
     }
     return map;
   }
@@ -13237,6 +13695,9 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
       commissionSettlementId: commissionSettlementId == null && nullToAbsent
           ? const Value.absent()
           : Value(commissionSettlementId),
+      promotionId: promotionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(promotionId),
     );
   }
 
@@ -13264,6 +13725,7 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
           serializer.fromJson<double?>(json['commissionMontant']),
       commissionSettlementId:
           serializer.fromJson<int?>(json['commissionSettlementId']),
+      promotionId: serializer.fromJson<int?>(json['promotionId']),
     );
   }
   @override
@@ -13287,6 +13749,7 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
       'commissionUnitaire': serializer.toJson<double?>(commissionUnitaire),
       'commissionMontant': serializer.toJson<double?>(commissionMontant),
       'commissionSettlementId': serializer.toJson<int?>(commissionSettlementId),
+      'promotionId': serializer.toJson<int?>(promotionId),
     };
   }
 
@@ -13307,7 +13770,8 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
           Value<String?> notesLigne = const Value.absent(),
           Value<double?> commissionUnitaire = const Value.absent(),
           Value<double?> commissionMontant = const Value.absent(),
-          Value<int?> commissionSettlementId = const Value.absent()}) =>
+          Value<int?> commissionSettlementId = const Value.absent(),
+          Value<int?> promotionId = const Value.absent()}) =>
       DocumentLine(
         id: id ?? this.id,
         documentId: documentId ?? this.documentId,
@@ -13332,6 +13796,7 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
         commissionSettlementId: commissionSettlementId.present
             ? commissionSettlementId.value
             : this.commissionSettlementId,
+        promotionId: promotionId.present ? promotionId.value : this.promotionId,
       );
   DocumentLine copyWithCompanion(DocumentLinesCompanion data) {
     return DocumentLine(
@@ -13367,6 +13832,8 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
       commissionSettlementId: data.commissionSettlementId.present
           ? data.commissionSettlementId.value
           : this.commissionSettlementId,
+      promotionId:
+          data.promotionId.present ? data.promotionId.value : this.promotionId,
     );
   }
 
@@ -13389,7 +13856,8 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
           ..write('notesLigne: $notesLigne, ')
           ..write('commissionUnitaire: $commissionUnitaire, ')
           ..write('commissionMontant: $commissionMontant, ')
-          ..write('commissionSettlementId: $commissionSettlementId')
+          ..write('commissionSettlementId: $commissionSettlementId, ')
+          ..write('promotionId: $promotionId')
           ..write(')'))
         .toString();
   }
@@ -13412,7 +13880,8 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
       notesLigne,
       commissionUnitaire,
       commissionMontant,
-      commissionSettlementId);
+      commissionSettlementId,
+      promotionId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -13433,7 +13902,8 @@ class DocumentLine extends DataClass implements Insertable<DocumentLine> {
           other.notesLigne == this.notesLigne &&
           other.commissionUnitaire == this.commissionUnitaire &&
           other.commissionMontant == this.commissionMontant &&
-          other.commissionSettlementId == this.commissionSettlementId);
+          other.commissionSettlementId == this.commissionSettlementId &&
+          other.promotionId == this.promotionId);
 }
 
 class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
@@ -13454,6 +13924,7 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
   final Value<double?> commissionUnitaire;
   final Value<double?> commissionMontant;
   final Value<int?> commissionSettlementId;
+  final Value<int?> promotionId;
   const DocumentLinesCompanion({
     this.id = const Value.absent(),
     this.documentId = const Value.absent(),
@@ -13472,6 +13943,7 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
     this.commissionUnitaire = const Value.absent(),
     this.commissionMontant = const Value.absent(),
     this.commissionSettlementId = const Value.absent(),
+    this.promotionId = const Value.absent(),
   });
   DocumentLinesCompanion.insert({
     this.id = const Value.absent(),
@@ -13491,6 +13963,7 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
     this.commissionUnitaire = const Value.absent(),
     this.commissionMontant = const Value.absent(),
     this.commissionSettlementId = const Value.absent(),
+    this.promotionId = const Value.absent(),
   })  : documentId = Value(documentId),
         articleId = Value(articleId),
         articleCode = Value(articleCode),
@@ -13515,6 +13988,7 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
     Expression<double>? commissionUnitaire,
     Expression<double>? commissionMontant,
     Expression<int>? commissionSettlementId,
+    Expression<int>? promotionId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -13535,6 +14009,7 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
       if (commissionMontant != null) 'commission_montant': commissionMontant,
       if (commissionSettlementId != null)
         'commission_settlement_id': commissionSettlementId,
+      if (promotionId != null) 'promotion_id': promotionId,
     });
   }
 
@@ -13555,7 +14030,8 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
       Value<String?>? notesLigne,
       Value<double?>? commissionUnitaire,
       Value<double?>? commissionMontant,
-      Value<int?>? commissionSettlementId}) {
+      Value<int?>? commissionSettlementId,
+      Value<int?>? promotionId}) {
     return DocumentLinesCompanion(
       id: id ?? this.id,
       documentId: documentId ?? this.documentId,
@@ -13575,6 +14051,7 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
       commissionMontant: commissionMontant ?? this.commissionMontant,
       commissionSettlementId:
           commissionSettlementId ?? this.commissionSettlementId,
+      promotionId: promotionId ?? this.promotionId,
     );
   }
 
@@ -13633,6 +14110,9 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
       map['commission_settlement_id'] =
           Variable<int>(commissionSettlementId.value);
     }
+    if (promotionId.present) {
+      map['promotion_id'] = Variable<int>(promotionId.value);
+    }
     return map;
   }
 
@@ -13655,7 +14135,8 @@ class DocumentLinesCompanion extends UpdateCompanion<DocumentLine> {
           ..write('notesLigne: $notesLigne, ')
           ..write('commissionUnitaire: $commissionUnitaire, ')
           ..write('commissionMontant: $commissionMontant, ')
-          ..write('commissionSettlementId: $commissionSettlementId')
+          ..write('commissionSettlementId: $commissionSettlementId, ')
+          ..write('promotionId: $promotionId')
           ..write(')'))
         .toString();
   }
@@ -22390,6 +22871,240 @@ class ExpenseAllocationsCompanion extends UpdateCompanion<ExpenseAllocation> {
   }
 }
 
+class $PromotionArticlesTable extends PromotionArticles
+    with TableInfo<$PromotionArticlesTable, PromotionArticle> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PromotionArticlesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _promotionIdMeta =
+      const VerificationMeta('promotionId');
+  @override
+  late final GeneratedColumn<int> promotionId = GeneratedColumn<int>(
+      'promotion_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      $customConstraints:
+          'NOT NULL REFERENCES promotions(id) ON DELETE CASCADE');
+  static const VerificationMeta _articleIdMeta =
+      const VerificationMeta('articleId');
+  @override
+  late final GeneratedColumn<int> articleId = GeneratedColumn<int>(
+      'article_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES articles (id)'));
+  @override
+  List<GeneratedColumn> get $columns => [id, promotionId, articleId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'promotion_articles';
+  @override
+  VerificationContext validateIntegrity(Insertable<PromotionArticle> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('promotion_id')) {
+      context.handle(
+          _promotionIdMeta,
+          promotionId.isAcceptableOrUnknown(
+              data['promotion_id']!, _promotionIdMeta));
+    } else if (isInserting) {
+      context.missing(_promotionIdMeta);
+    }
+    if (data.containsKey('article_id')) {
+      context.handle(_articleIdMeta,
+          articleId.isAcceptableOrUnknown(data['article_id']!, _articleIdMeta));
+    } else if (isInserting) {
+      context.missing(_articleIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {promotionId, articleId},
+      ];
+  @override
+  PromotionArticle map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PromotionArticle(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      promotionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}promotion_id'])!,
+      articleId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}article_id'])!,
+    );
+  }
+
+  @override
+  $PromotionArticlesTable createAlias(String alias) {
+    return $PromotionArticlesTable(attachedDatabase, alias);
+  }
+}
+
+class PromotionArticle extends DataClass
+    implements Insertable<PromotionArticle> {
+  final int id;
+
+  /// ON DELETE CASCADE : la suppression de la promotion supprime son
+  /// association aux pneus.
+  final int promotionId;
+  final int articleId;
+  const PromotionArticle(
+      {required this.id, required this.promotionId, required this.articleId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['promotion_id'] = Variable<int>(promotionId);
+    map['article_id'] = Variable<int>(articleId);
+    return map;
+  }
+
+  PromotionArticlesCompanion toCompanion(bool nullToAbsent) {
+    return PromotionArticlesCompanion(
+      id: Value(id),
+      promotionId: Value(promotionId),
+      articleId: Value(articleId),
+    );
+  }
+
+  factory PromotionArticle.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PromotionArticle(
+      id: serializer.fromJson<int>(json['id']),
+      promotionId: serializer.fromJson<int>(json['promotionId']),
+      articleId: serializer.fromJson<int>(json['articleId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'promotionId': serializer.toJson<int>(promotionId),
+      'articleId': serializer.toJson<int>(articleId),
+    };
+  }
+
+  PromotionArticle copyWith({int? id, int? promotionId, int? articleId}) =>
+      PromotionArticle(
+        id: id ?? this.id,
+        promotionId: promotionId ?? this.promotionId,
+        articleId: articleId ?? this.articleId,
+      );
+  PromotionArticle copyWithCompanion(PromotionArticlesCompanion data) {
+    return PromotionArticle(
+      id: data.id.present ? data.id.value : this.id,
+      promotionId:
+          data.promotionId.present ? data.promotionId.value : this.promotionId,
+      articleId: data.articleId.present ? data.articleId.value : this.articleId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PromotionArticle(')
+          ..write('id: $id, ')
+          ..write('promotionId: $promotionId, ')
+          ..write('articleId: $articleId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, promotionId, articleId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PromotionArticle &&
+          other.id == this.id &&
+          other.promotionId == this.promotionId &&
+          other.articleId == this.articleId);
+}
+
+class PromotionArticlesCompanion extends UpdateCompanion<PromotionArticle> {
+  final Value<int> id;
+  final Value<int> promotionId;
+  final Value<int> articleId;
+  const PromotionArticlesCompanion({
+    this.id = const Value.absent(),
+    this.promotionId = const Value.absent(),
+    this.articleId = const Value.absent(),
+  });
+  PromotionArticlesCompanion.insert({
+    this.id = const Value.absent(),
+    required int promotionId,
+    required int articleId,
+  })  : promotionId = Value(promotionId),
+        articleId = Value(articleId);
+  static Insertable<PromotionArticle> custom({
+    Expression<int>? id,
+    Expression<int>? promotionId,
+    Expression<int>? articleId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (promotionId != null) 'promotion_id': promotionId,
+      if (articleId != null) 'article_id': articleId,
+    });
+  }
+
+  PromotionArticlesCompanion copyWith(
+      {Value<int>? id, Value<int>? promotionId, Value<int>? articleId}) {
+    return PromotionArticlesCompanion(
+      id: id ?? this.id,
+      promotionId: promotionId ?? this.promotionId,
+      articleId: articleId ?? this.articleId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (promotionId.present) {
+      map['promotion_id'] = Variable<int>(promotionId.value);
+    }
+    if (articleId.present) {
+      map['article_id'] = Variable<int>(articleId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PromotionArticlesCompanion(')
+          ..write('id: $id, ')
+          ..write('promotionId: $promotionId, ')
+          ..write('articleId: $articleId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -22421,6 +23136,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $CommercialDocumentsTable(this);
   late final $CommissionSettlementsTable commissionSettlements =
       $CommissionSettlementsTable(this);
+  late final $PromotionsTable promotions = $PromotionsTable(this);
   late final $DocumentLinesTable documentLines = $DocumentLinesTable(this);
   late final $DocumentPaymentsTable documentPayments =
       $DocumentPaymentsTable(this);
@@ -22450,6 +23166,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $StockLotConsumptionsTable(this);
   late final $ExpenseAllocationsTable expenseAllocations =
       $ExpenseAllocationsTable(this);
+  late final $PromotionArticlesTable promotionArticles =
+      $PromotionArticlesTable(this);
   late final UsersDao usersDao = UsersDao(this as AppDatabase);
   late final StoresDao storesDao = StoresDao(this as AppDatabase);
   late final ArticlesDao articlesDao = ArticlesDao(this as AppDatabase);
@@ -22477,6 +23195,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final ExpensesDao expensesDao = ExpensesDao(this as AppDatabase);
   late final LoadingsDao loadingsDao = LoadingsDao(this as AppDatabase);
   late final StockLotsDao stockLotsDao = StockLotsDao(this as AppDatabase);
+  late final PromotionsDao promotionsDao = PromotionsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -22507,6 +23226,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         employees,
         commercialDocuments,
         commissionSettlements,
+        promotions,
         documentLines,
         documentPayments,
         documentHistories,
@@ -22525,8 +23245,21 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         expenses,
         stockLots,
         stockLotConsumptions,
-        expenseAllocations
+        expenseAllocations,
+        promotionArticles
       ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
+        [
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('promotions',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('promotion_articles', kind: UpdateKind.delete),
+            ],
+          ),
+        ],
+      );
 }
 
 typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
@@ -26200,6 +26933,23 @@ final class $$ArticlesTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$PromotionArticlesTable, List<PromotionArticle>>
+      _promotionArticlesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.promotionArticles,
+              aliasName: $_aliasNameGenerator(
+                  db.articles.id, db.promotionArticles.articleId));
+
+  $$PromotionArticlesTableProcessedTableManager get promotionArticlesRefs {
+    final manager =
+        $$PromotionArticlesTableTableManager($_db, $_db.promotionArticles)
+            .filter((f) => f.articleId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_promotionArticlesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$ArticlesTableFilterComposer
@@ -26559,6 +27309,27 @@ class $$ArticlesTableFilterComposer
             $$StockLotConsumptionsTableFilterComposer(
               $db: $db,
               $table: $db.stockLotConsumptions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> promotionArticlesRefs(
+      Expression<bool> Function($$PromotionArticlesTableFilterComposer f) f) {
+    final $$PromotionArticlesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.promotionArticles,
+        getReferencedColumn: (t) => t.articleId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PromotionArticlesTableFilterComposer(
+              $db: $db,
+              $table: $db.promotionArticles,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -27046,6 +27817,28 @@ class $$ArticlesTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> promotionArticlesRefs<T extends Object>(
+      Expression<T> Function($$PromotionArticlesTableAnnotationComposer a) f) {
+    final $$PromotionArticlesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.promotionArticles,
+            getReferencedColumn: (t) => t.articleId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$PromotionArticlesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.promotionArticles,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$ArticlesTableTableManager extends RootTableManager<
@@ -27073,7 +27866,8 @@ class $$ArticlesTableTableManager extends RootTableManager<
         bool commissionConfigOverridesRefs,
         bool expensesRefs,
         bool stockLotsRefs,
-        bool stockLotConsumptionsRefs})> {
+        bool stockLotConsumptionsRefs,
+        bool promotionArticlesRefs})> {
   $$ArticlesTableTableManager(_$AppDatabase db, $ArticlesTable table)
       : super(TableManagerState(
           db: db,
@@ -27198,7 +27992,8 @@ class $$ArticlesTableTableManager extends RootTableManager<
               commissionConfigOverridesRefs = false,
               expensesRefs = false,
               stockLotsRefs = false,
-              stockLotConsumptionsRefs = false}) {
+              stockLotConsumptionsRefs = false,
+              promotionArticlesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -27213,7 +28008,8 @@ class $$ArticlesTableTableManager extends RootTableManager<
                 if (commissionConfigOverridesRefs) db.commissionConfigOverrides,
                 if (expensesRefs) db.expenses,
                 if (stockLotsRefs) db.stockLots,
-                if (stockLotConsumptionsRefs) db.stockLotConsumptions
+                if (stockLotConsumptionsRefs) db.stockLotConsumptions,
+                if (promotionArticlesRefs) db.promotionArticles
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -27407,6 +28203,19 @@ class $$ArticlesTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.articleId == item.id),
+                        typedResults: items),
+                  if (promotionArticlesRefs)
+                    await $_getPrefetchedData<Article, $ArticlesTable,
+                            PromotionArticle>(
+                        currentTable: table,
+                        referencedTable: $$ArticlesTableReferences
+                            ._promotionArticlesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ArticlesTableReferences(db, table, p0)
+                                .promotionArticlesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.articleId == item.id),
                         typedResults: items)
                 ];
               },
@@ -27440,7 +28249,8 @@ typedef $$ArticlesTableProcessedTableManager = ProcessedTableManager<
         bool commissionConfigOverridesRefs,
         bool expensesRefs,
         bool stockLotsRefs,
-        bool stockLotConsumptionsRefs})>;
+        bool stockLotConsumptionsRefs,
+        bool promotionArticlesRefs})>;
 typedef $$ArticleStocksTableCreateCompanionBuilder = ArticleStocksCompanion
     Function({
   Value<int> id,
@@ -37743,6 +38553,378 @@ typedef $$CommissionSettlementsTableProcessedTableManager
         CommissionSettlement,
         PrefetchHooks Function(
             {bool employeeId, bool payeParUserId, bool documentLinesRefs})>;
+typedef $$PromotionsTableCreateCompanionBuilder = PromotionsCompanion Function({
+  Value<int> id,
+  required String nom,
+  Value<String> typeRemise,
+  required double valeur,
+  required DateTime dateDebut,
+  required DateTime dateFin,
+  Value<bool> actif,
+  Value<DateTime> dateCreation,
+});
+typedef $$PromotionsTableUpdateCompanionBuilder = PromotionsCompanion Function({
+  Value<int> id,
+  Value<String> nom,
+  Value<String> typeRemise,
+  Value<double> valeur,
+  Value<DateTime> dateDebut,
+  Value<DateTime> dateFin,
+  Value<bool> actif,
+  Value<DateTime> dateCreation,
+});
+
+final class $$PromotionsTableReferences
+    extends BaseReferences<_$AppDatabase, $PromotionsTable, Promotion> {
+  $$PromotionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$DocumentLinesTable, List<DocumentLine>>
+      _documentLinesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.documentLines,
+              aliasName: $_aliasNameGenerator(
+                  db.promotions.id, db.documentLines.promotionId));
+
+  $$DocumentLinesTableProcessedTableManager get documentLinesRefs {
+    final manager = $$DocumentLinesTableTableManager($_db, $_db.documentLines)
+        .filter((f) => f.promotionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_documentLinesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$PromotionArticlesTable, List<PromotionArticle>>
+      _promotionArticlesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.promotionArticles,
+              aliasName: $_aliasNameGenerator(
+                  db.promotions.id, db.promotionArticles.promotionId));
+
+  $$PromotionArticlesTableProcessedTableManager get promotionArticlesRefs {
+    final manager = $$PromotionArticlesTableTableManager(
+            $_db, $_db.promotionArticles)
+        .filter((f) => f.promotionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_promotionArticlesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$PromotionsTableFilterComposer
+    extends Composer<_$AppDatabase, $PromotionsTable> {
+  $$PromotionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nom => $composableBuilder(
+      column: $table.nom, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get typeRemise => $composableBuilder(
+      column: $table.typeRemise, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get valeur => $composableBuilder(
+      column: $table.valeur, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get dateDebut => $composableBuilder(
+      column: $table.dateDebut, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get dateFin => $composableBuilder(
+      column: $table.dateFin, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get actif => $composableBuilder(
+      column: $table.actif, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get dateCreation => $composableBuilder(
+      column: $table.dateCreation, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> documentLinesRefs(
+      Expression<bool> Function($$DocumentLinesTableFilterComposer f) f) {
+    final $$DocumentLinesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.documentLines,
+        getReferencedColumn: (t) => t.promotionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DocumentLinesTableFilterComposer(
+              $db: $db,
+              $table: $db.documentLines,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> promotionArticlesRefs(
+      Expression<bool> Function($$PromotionArticlesTableFilterComposer f) f) {
+    final $$PromotionArticlesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.promotionArticles,
+        getReferencedColumn: (t) => t.promotionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PromotionArticlesTableFilterComposer(
+              $db: $db,
+              $table: $db.promotionArticles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$PromotionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PromotionsTable> {
+  $$PromotionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nom => $composableBuilder(
+      column: $table.nom, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get typeRemise => $composableBuilder(
+      column: $table.typeRemise, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get valeur => $composableBuilder(
+      column: $table.valeur, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get dateDebut => $composableBuilder(
+      column: $table.dateDebut, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get dateFin => $composableBuilder(
+      column: $table.dateFin, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get actif => $composableBuilder(
+      column: $table.actif, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get dateCreation => $composableBuilder(
+      column: $table.dateCreation,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$PromotionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PromotionsTable> {
+  $$PromotionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get nom =>
+      $composableBuilder(column: $table.nom, builder: (column) => column);
+
+  GeneratedColumn<String> get typeRemise => $composableBuilder(
+      column: $table.typeRemise, builder: (column) => column);
+
+  GeneratedColumn<double> get valeur =>
+      $composableBuilder(column: $table.valeur, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get dateDebut =>
+      $composableBuilder(column: $table.dateDebut, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get dateFin =>
+      $composableBuilder(column: $table.dateFin, builder: (column) => column);
+
+  GeneratedColumn<bool> get actif =>
+      $composableBuilder(column: $table.actif, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get dateCreation => $composableBuilder(
+      column: $table.dateCreation, builder: (column) => column);
+
+  Expression<T> documentLinesRefs<T extends Object>(
+      Expression<T> Function($$DocumentLinesTableAnnotationComposer a) f) {
+    final $$DocumentLinesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.documentLines,
+        getReferencedColumn: (t) => t.promotionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DocumentLinesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.documentLines,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> promotionArticlesRefs<T extends Object>(
+      Expression<T> Function($$PromotionArticlesTableAnnotationComposer a) f) {
+    final $$PromotionArticlesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.promotionArticles,
+            getReferencedColumn: (t) => t.promotionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$PromotionArticlesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.promotionArticles,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$PromotionsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PromotionsTable,
+    Promotion,
+    $$PromotionsTableFilterComposer,
+    $$PromotionsTableOrderingComposer,
+    $$PromotionsTableAnnotationComposer,
+    $$PromotionsTableCreateCompanionBuilder,
+    $$PromotionsTableUpdateCompanionBuilder,
+    (Promotion, $$PromotionsTableReferences),
+    Promotion,
+    PrefetchHooks Function(
+        {bool documentLinesRefs, bool promotionArticlesRefs})> {
+  $$PromotionsTableTableManager(_$AppDatabase db, $PromotionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PromotionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PromotionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PromotionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> nom = const Value.absent(),
+            Value<String> typeRemise = const Value.absent(),
+            Value<double> valeur = const Value.absent(),
+            Value<DateTime> dateDebut = const Value.absent(),
+            Value<DateTime> dateFin = const Value.absent(),
+            Value<bool> actif = const Value.absent(),
+            Value<DateTime> dateCreation = const Value.absent(),
+          }) =>
+              PromotionsCompanion(
+            id: id,
+            nom: nom,
+            typeRemise: typeRemise,
+            valeur: valeur,
+            dateDebut: dateDebut,
+            dateFin: dateFin,
+            actif: actif,
+            dateCreation: dateCreation,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String nom,
+            Value<String> typeRemise = const Value.absent(),
+            required double valeur,
+            required DateTime dateDebut,
+            required DateTime dateFin,
+            Value<bool> actif = const Value.absent(),
+            Value<DateTime> dateCreation = const Value.absent(),
+          }) =>
+              PromotionsCompanion.insert(
+            id: id,
+            nom: nom,
+            typeRemise: typeRemise,
+            valeur: valeur,
+            dateDebut: dateDebut,
+            dateFin: dateFin,
+            actif: actif,
+            dateCreation: dateCreation,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$PromotionsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {documentLinesRefs = false, promotionArticlesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (documentLinesRefs) db.documentLines,
+                if (promotionArticlesRefs) db.promotionArticles
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (documentLinesRefs)
+                    await $_getPrefetchedData<Promotion, $PromotionsTable,
+                            DocumentLine>(
+                        currentTable: table,
+                        referencedTable: $$PromotionsTableReferences
+                            ._documentLinesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$PromotionsTableReferences(db, table, p0)
+                                .documentLinesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.promotionId == item.id),
+                        typedResults: items),
+                  if (promotionArticlesRefs)
+                    await $_getPrefetchedData<Promotion, $PromotionsTable,
+                            PromotionArticle>(
+                        currentTable: table,
+                        referencedTable: $$PromotionsTableReferences
+                            ._promotionArticlesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$PromotionsTableReferences(db, table, p0)
+                                .promotionArticlesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.promotionId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$PromotionsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PromotionsTable,
+    Promotion,
+    $$PromotionsTableFilterComposer,
+    $$PromotionsTableOrderingComposer,
+    $$PromotionsTableAnnotationComposer,
+    $$PromotionsTableCreateCompanionBuilder,
+    $$PromotionsTableUpdateCompanionBuilder,
+    (Promotion, $$PromotionsTableReferences),
+    Promotion,
+    PrefetchHooks Function(
+        {bool documentLinesRefs, bool promotionArticlesRefs})>;
 typedef $$DocumentLinesTableCreateCompanionBuilder = DocumentLinesCompanion
     Function({
   Value<int> id,
@@ -37762,6 +38944,7 @@ typedef $$DocumentLinesTableCreateCompanionBuilder = DocumentLinesCompanion
   Value<double?> commissionUnitaire,
   Value<double?> commissionMontant,
   Value<int?> commissionSettlementId,
+  Value<int?> promotionId,
 });
 typedef $$DocumentLinesTableUpdateCompanionBuilder = DocumentLinesCompanion
     Function({
@@ -37782,6 +38965,7 @@ typedef $$DocumentLinesTableUpdateCompanionBuilder = DocumentLinesCompanion
   Value<double?> commissionUnitaire,
   Value<double?> commissionMontant,
   Value<int?> commissionSettlementId,
+  Value<int?> promotionId,
 });
 
 final class $$DocumentLinesTableReferences
@@ -37819,6 +39003,21 @@ final class $$DocumentLinesTableReferences
         .filter((f) => f.id.sqlEquals($_column));
     final item =
         $_typedResult.readTableOrNull(_commissionSettlementIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $PromotionsTable _promotionIdTable(_$AppDatabase db) =>
+      db.promotions.createAlias(
+          $_aliasNameGenerator(db.documentLines.promotionId, db.promotions.id));
+
+  $$PromotionsTableProcessedTableManager? get promotionId {
+    final $_column = $_itemColumn<int>('promotion_id');
+    if ($_column == null) return null;
+    final manager = $$PromotionsTableTableManager($_db, $_db.promotions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_promotionIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -37943,6 +39142,26 @@ class $$DocumentLinesTableFilterComposer
     return composer;
   }
 
+  $$PromotionsTableFilterComposer get promotionId {
+    final $$PromotionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.promotionId,
+        referencedTable: $db.promotions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PromotionsTableFilterComposer(
+              $db: $db,
+              $table: $db.promotions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   Expression<bool> stockLotConsumptionsRefs(
       Expression<bool> Function($$StockLotConsumptionsTableFilterComposer f)
           f) {
@@ -38064,6 +39283,26 @@ class $$DocumentLinesTableOrderingComposer
                 ));
     return composer;
   }
+
+  $$PromotionsTableOrderingComposer get promotionId {
+    final $$PromotionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.promotionId,
+        referencedTable: $db.promotions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PromotionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.promotions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$DocumentLinesTableAnnotationComposer
@@ -38161,6 +39400,26 @@ class $$DocumentLinesTableAnnotationComposer
     return composer;
   }
 
+  $$PromotionsTableAnnotationComposer get promotionId {
+    final $$PromotionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.promotionId,
+        referencedTable: $db.promotions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PromotionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.promotions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   Expression<T> stockLotConsumptionsRefs<T extends Object>(
       Expression<T> Function($$StockLotConsumptionsTableAnnotationComposer a)
           f) {
@@ -38199,6 +39458,7 @@ class $$DocumentLinesTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool articleId,
         bool commissionSettlementId,
+        bool promotionId,
         bool stockLotConsumptionsRefs})> {
   $$DocumentLinesTableTableManager(_$AppDatabase db, $DocumentLinesTable table)
       : super(TableManagerState(
@@ -38228,6 +39488,7 @@ class $$DocumentLinesTableTableManager extends RootTableManager<
             Value<double?> commissionUnitaire = const Value.absent(),
             Value<double?> commissionMontant = const Value.absent(),
             Value<int?> commissionSettlementId = const Value.absent(),
+            Value<int?> promotionId = const Value.absent(),
           }) =>
               DocumentLinesCompanion(
             id: id,
@@ -38247,6 +39508,7 @@ class $$DocumentLinesTableTableManager extends RootTableManager<
             commissionUnitaire: commissionUnitaire,
             commissionMontant: commissionMontant,
             commissionSettlementId: commissionSettlementId,
+            promotionId: promotionId,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -38266,6 +39528,7 @@ class $$DocumentLinesTableTableManager extends RootTableManager<
             Value<double?> commissionUnitaire = const Value.absent(),
             Value<double?> commissionMontant = const Value.absent(),
             Value<int?> commissionSettlementId = const Value.absent(),
+            Value<int?> promotionId = const Value.absent(),
           }) =>
               DocumentLinesCompanion.insert(
             id: id,
@@ -38285,6 +39548,7 @@ class $$DocumentLinesTableTableManager extends RootTableManager<
             commissionUnitaire: commissionUnitaire,
             commissionMontant: commissionMontant,
             commissionSettlementId: commissionSettlementId,
+            promotionId: promotionId,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -38295,6 +39559,7 @@ class $$DocumentLinesTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {articleId = false,
               commissionSettlementId = false,
+              promotionId = false,
               stockLotConsumptionsRefs = false}) {
             return PrefetchHooks(
               db: db,
@@ -38333,6 +39598,16 @@ class $$DocumentLinesTableTableManager extends RootTableManager<
                     referencedColumn: $$DocumentLinesTableReferences
                         ._commissionSettlementIdTable(db)
                         .id,
+                  ) as T;
+                }
+                if (promotionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.promotionId,
+                    referencedTable:
+                        $$DocumentLinesTableReferences._promotionIdTable(db),
+                    referencedColumn:
+                        $$DocumentLinesTableReferences._promotionIdTable(db).id,
                   ) as T;
                 }
 
@@ -38374,6 +39649,7 @@ typedef $$DocumentLinesTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool articleId,
         bool commissionSettlementId,
+        bool promotionId,
         bool stockLotConsumptionsRefs})>;
 typedef $$DocumentPaymentsTableCreateCompanionBuilder
     = DocumentPaymentsCompanion Function({
@@ -46624,6 +47900,326 @@ typedef $$ExpenseAllocationsTableProcessedTableManager = ProcessedTableManager<
     (ExpenseAllocation, $$ExpenseAllocationsTableReferences),
     ExpenseAllocation,
     PrefetchHooks Function({bool expenseId, bool purchaseItemId})>;
+typedef $$PromotionArticlesTableCreateCompanionBuilder
+    = PromotionArticlesCompanion Function({
+  Value<int> id,
+  required int promotionId,
+  required int articleId,
+});
+typedef $$PromotionArticlesTableUpdateCompanionBuilder
+    = PromotionArticlesCompanion Function({
+  Value<int> id,
+  Value<int> promotionId,
+  Value<int> articleId,
+});
+
+final class $$PromotionArticlesTableReferences extends BaseReferences<
+    _$AppDatabase, $PromotionArticlesTable, PromotionArticle> {
+  $$PromotionArticlesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $PromotionsTable _promotionIdTable(_$AppDatabase db) =>
+      db.promotions.createAlias($_aliasNameGenerator(
+          db.promotionArticles.promotionId, db.promotions.id));
+
+  $$PromotionsTableProcessedTableManager get promotionId {
+    final $_column = $_itemColumn<int>('promotion_id')!;
+
+    final manager = $$PromotionsTableTableManager($_db, $_db.promotions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_promotionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ArticlesTable _articleIdTable(_$AppDatabase db) =>
+      db.articles.createAlias(
+          $_aliasNameGenerator(db.promotionArticles.articleId, db.articles.id));
+
+  $$ArticlesTableProcessedTableManager get articleId {
+    final $_column = $_itemColumn<int>('article_id')!;
+
+    final manager = $$ArticlesTableTableManager($_db, $_db.articles)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_articleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$PromotionArticlesTableFilterComposer
+    extends Composer<_$AppDatabase, $PromotionArticlesTable> {
+  $$PromotionArticlesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  $$PromotionsTableFilterComposer get promotionId {
+    final $$PromotionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.promotionId,
+        referencedTable: $db.promotions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PromotionsTableFilterComposer(
+              $db: $db,
+              $table: $db.promotions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ArticlesTableFilterComposer get articleId {
+    final $$ArticlesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.articleId,
+        referencedTable: $db.articles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ArticlesTableFilterComposer(
+              $db: $db,
+              $table: $db.articles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$PromotionArticlesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PromotionArticlesTable> {
+  $$PromotionArticlesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  $$PromotionsTableOrderingComposer get promotionId {
+    final $$PromotionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.promotionId,
+        referencedTable: $db.promotions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PromotionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.promotions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ArticlesTableOrderingComposer get articleId {
+    final $$ArticlesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.articleId,
+        referencedTable: $db.articles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ArticlesTableOrderingComposer(
+              $db: $db,
+              $table: $db.articles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$PromotionArticlesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PromotionArticlesTable> {
+  $$PromotionArticlesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  $$PromotionsTableAnnotationComposer get promotionId {
+    final $$PromotionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.promotionId,
+        referencedTable: $db.promotions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PromotionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.promotions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ArticlesTableAnnotationComposer get articleId {
+    final $$ArticlesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.articleId,
+        referencedTable: $db.articles,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ArticlesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.articles,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$PromotionArticlesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PromotionArticlesTable,
+    PromotionArticle,
+    $$PromotionArticlesTableFilterComposer,
+    $$PromotionArticlesTableOrderingComposer,
+    $$PromotionArticlesTableAnnotationComposer,
+    $$PromotionArticlesTableCreateCompanionBuilder,
+    $$PromotionArticlesTableUpdateCompanionBuilder,
+    (PromotionArticle, $$PromotionArticlesTableReferences),
+    PromotionArticle,
+    PrefetchHooks Function({bool promotionId, bool articleId})> {
+  $$PromotionArticlesTableTableManager(
+      _$AppDatabase db, $PromotionArticlesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PromotionArticlesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PromotionArticlesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PromotionArticlesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> promotionId = const Value.absent(),
+            Value<int> articleId = const Value.absent(),
+          }) =>
+              PromotionArticlesCompanion(
+            id: id,
+            promotionId: promotionId,
+            articleId: articleId,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int promotionId,
+            required int articleId,
+          }) =>
+              PromotionArticlesCompanion.insert(
+            id: id,
+            promotionId: promotionId,
+            articleId: articleId,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$PromotionArticlesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({promotionId = false, articleId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (promotionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.promotionId,
+                    referencedTable: $$PromotionArticlesTableReferences
+                        ._promotionIdTable(db),
+                    referencedColumn: $$PromotionArticlesTableReferences
+                        ._promotionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (articleId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.articleId,
+                    referencedTable:
+                        $$PromotionArticlesTableReferences._articleIdTable(db),
+                    referencedColumn: $$PromotionArticlesTableReferences
+                        ._articleIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$PromotionArticlesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PromotionArticlesTable,
+    PromotionArticle,
+    $$PromotionArticlesTableFilterComposer,
+    $$PromotionArticlesTableOrderingComposer,
+    $$PromotionArticlesTableAnnotationComposer,
+    $$PromotionArticlesTableCreateCompanionBuilder,
+    $$PromotionArticlesTableUpdateCompanionBuilder,
+    (PromotionArticle, $$PromotionArticlesTableReferences),
+    PromotionArticle,
+    PrefetchHooks Function({bool promotionId, bool articleId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -46678,6 +48274,8 @@ class $AppDatabaseManager {
       $$CommercialDocumentsTableTableManager(_db, _db.commercialDocuments);
   $$CommissionSettlementsTableTableManager get commissionSettlements =>
       $$CommissionSettlementsTableTableManager(_db, _db.commissionSettlements);
+  $$PromotionsTableTableManager get promotions =>
+      $$PromotionsTableTableManager(_db, _db.promotions);
   $$DocumentLinesTableTableManager get documentLines =>
       $$DocumentLinesTableTableManager(_db, _db.documentLines);
   $$DocumentPaymentsTableTableManager get documentPayments =>
@@ -46717,4 +48315,6 @@ class $AppDatabaseManager {
       $$StockLotConsumptionsTableTableManager(_db, _db.stockLotConsumptions);
   $$ExpenseAllocationsTableTableManager get expenseAllocations =>
       $$ExpenseAllocationsTableTableManager(_db, _db.expenseAllocations);
+  $$PromotionArticlesTableTableManager get promotionArticles =>
+      $$PromotionArticlesTableTableManager(_db, _db.promotionArticles);
 }

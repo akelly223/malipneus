@@ -7,9 +7,12 @@ import '../../app/providers/repository_providers.dart';
 import '../../app/providers/session_provider.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/services/commission_receipt_pdf_service.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../domain/entities/commission.dart';
+import '../personnel/providers/personnel_provider.dart';
+import '../settings/providers/settings_provider.dart';
 import 'providers/commissions_provider.dart';
 
 /// Module Règlement des commissions (sections 8/9).
@@ -169,61 +172,79 @@ class _DueAmountCard extends ConsumerWidget {
     return dueAsync.when(
       data: (due) {
         final estNonRegle = due.montantCommission > 0.01;
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: estNonRegle ? AppColors.warning : AppColors.border),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('${due.nombreVentes} vente(s) — '
-                        '${due.quantiteTotale.toStringAsFixed(0)} article(s)'),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Commission due : '
-                      '${CurrencyFormatter.format(due.montantCommission)}',
-                      style: AppTextStyles.bodyBold.copyWith(fontSize: 18),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(top: 6),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: (estNonRegle
-                                ? AppColors.warning
-                                : AppColors.success)
-                            .withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        estNonRegle ? 'NON RÉGLÉ' : 'RIEN À RÉGLER',
-                        style: TextStyle(
-                          color: estNonRegle
-                              ? AppColors.warning
-                              : AppColors.success,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: estNonRegle ? AppColors.warning : AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${due.nombreVentes} vente(s) — '
+                            '${due.quantiteTotale.toStringAsFixed(0)} article(s)'),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Commission due : '
+                          '${CurrencyFormatter.format(due.montantCommission)}',
+                          style: AppTextStyles.bodyBold.copyWith(fontSize: 18),
                         ),
-                      ),
+                        Container(
+                          margin: const EdgeInsets.only(top: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: (estNonRegle
+                                    ? AppColors.warning
+                                    : AppColors.success)
+                                .withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            estNonRegle ? 'NON RÉGLÉ' : 'RIEN À RÉGLER',
+                            style: TextStyle(
+                              color: estNonRegle
+                                  ? AppColors.warning
+                                  : AppColors.success,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (due.nombreVentes > 0)
+                    AppButton(
+                      label: 'Exporter PDF',
+                      icon: Icons.picture_as_pdf_outlined,
+                      isOutlined: true,
+                      onPressed: () => _exporterPdf(context, ref, due),
+                    ),
+                  if (estNonRegle) ...[
+                    const SizedBox(width: 12),
+                    AppButton(
+                      label: 'Régler',
+                      icon: Icons.check_circle_outline_rounded,
+                      onPressed: () => _regler(context, ref, due),
                     ),
                   ],
-                ),
+                ],
               ),
-              if (estNonRegle)
-                AppButton(
-                  label: 'Régler',
-                  icon: Icons.check_circle_outline_rounded,
-                  onPressed: () => _regler(context, ref, due),
-                ),
+            ),
+            if (due.nombreVentes > 0) ...[
+              const SizedBox(height: 16),
+              _DetailVentesList(params: params),
             ],
-          ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -300,6 +321,86 @@ class _DueAmountCard extends ConsumerWidget {
     ref.invalidate(allSettlementsProvider);
     onRegle();
   }
+
+  Future<void> _exporterPdf(
+      BuildContext context, WidgetRef ref, CommissionsDuesEntity due) async {
+    final params =
+        PeriodeParams(employeeId: employeeId, debut: debut, fin: fin);
+    try {
+      final employee = await ref.read(employeeByIdProvider(employeeId).future);
+      final lignes =
+          await ref.read(commissionsDetailDuesProvider(params).future);
+      final settings = await ref.read(appSettingsProvider.future);
+      await CommissionReceiptPdfService.print(
+        employeeNomComplet: employee?.nomComplet ?? '—',
+        periodeDebut: debut,
+        periodeFin: fin,
+        lignes: lignes,
+        montantCommission: due.montantCommission,
+        settings: settings,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erreur export PDF : $e')));
+      }
+    }
+  }
+}
+
+class _DetailVentesList extends ConsumerWidget {
+  final PeriodeParams params;
+  const _DetailVentesList({required this.params});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detailAsync = ref.watch(commissionsDetailDuesProvider(params));
+    return detailAsync.when(
+      data: (lignes) {
+        if (lignes.isEmpty) return const SizedBox.shrink();
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              for (final l in lignes)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: Text(DateFormatter.formatDate(l.dateDocument),
+                            style: AppTextStyles.caption),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(l.clientNom ?? 'Vente comptoir',
+                            style: AppTextStyles.body),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Text(l.articleNom,
+                            style: AppTextStyles.caption,
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                      Text(CurrencyFormatter.format(l.commissionMontant),
+                          style: AppTextStyles.bodyBold),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
 }
 
 class _EmployeeSettlementsHistory extends ConsumerWidget {
@@ -356,12 +457,12 @@ class _AllSettlementsHistory extends ConsumerWidget {
   }
 }
 
-class _SettlementTile extends StatelessWidget {
+class _SettlementTile extends ConsumerWidget {
   final CommissionSettlementEntity settlement;
   const _SettlementTile({required this.settlement});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -396,8 +497,38 @@ class _SettlementTile extends StatelessWidget {
                   style: AppTextStyles.caption),
             ],
           ),
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf_outlined,
+                color: AppColors.textSecondary),
+            tooltip: 'Exporter le reçu PDF',
+            onPressed: () => _exporterRecu(context, ref),
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _exporterRecu(BuildContext context, WidgetRef ref) async {
+    try {
+      final lignes =
+          await ref.read(settlementDetailProvider(settlement.id).future);
+      final settings = await ref.read(appSettingsProvider.future);
+      await CommissionReceiptPdfService.print(
+        employeeNomComplet: settlement.employeeNomComplet ?? '—',
+        periodeDebut: settlement.periodeDebut,
+        periodeFin: settlement.periodeFin,
+        lignes: lignes,
+        montantCommission: settlement.montantCommission,
+        settings: settings,
+        datePaiement: settlement.datePaiement,
+        modePaiement: settlement.modePaiement,
+        payeParUserNom: settlement.payeParUserNom,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erreur export PDF : $e')));
+      }
+    }
   }
 }

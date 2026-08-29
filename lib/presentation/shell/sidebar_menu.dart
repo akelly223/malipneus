@@ -31,6 +31,7 @@ const _entries = <_Entry>[
       ['/invoices', '/quotes', '/proformas']),
   _Entry('Achats', Icons.shopping_cart_rounded, '/purchases'),
   _Entry('Articles', Icons.inventory_2_rounded, '/articles'),
+  _Entry('Promotions', Icons.local_offer_rounded, '/promotions'),
   _Entry('Clients', Icons.people_alt_rounded, '/clients'),
   _Entry('Dettes', Icons.account_balance_wallet_rounded, '/debts'),
   _Entry('Historique paiements', Icons.receipt_long_rounded, '/receipts'),

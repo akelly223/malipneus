@@ -18,6 +18,7 @@ import '../../domain/entities/document_type.dart';
 import '../../domain/entities/document_input.dart';
 import '../articles/providers/article_provider.dart';
 import '../commissions/providers/commissions_provider.dart';
+import '../promotions/providers/promotions_provider.dart';
 import 'providers/commercial_document_providers.dart';
 import 'providers/document_form_notifier.dart';
 
@@ -287,6 +288,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                           .watch(articlesRecentsProvider(formState.storeId!))
                           .valueOrNull ??
                       const [],
+              promotionsActives:
+                  ref.watch(activePromotionsMapProvider).valueOrNull ??
+                      const {},
             ),
             const SizedBox(height: 24),
             DocumentTotalsFooter(

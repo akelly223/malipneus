@@ -21,6 +21,7 @@ import '../../data/repositories/payroll_repository_impl.dart';
 import '../../data/repositories/commissions_repository_impl.dart';
 import '../../data/repositories/expenses_repository_impl.dart';
 import '../../data/repositories/loadings_repository_impl.dart';
+import '../../data/repositories/promotions_repository_impl.dart';
 
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/article_repository.dart';
@@ -41,6 +42,7 @@ import '../../domain/repositories/payroll_repository.dart';
 import '../../domain/repositories/commissions_repository.dart';
 import '../../domain/repositories/expenses_repository.dart';
 import '../../domain/repositories/loadings_repository.dart';
+import '../../domain/repositories/promotions_repository.dart';
 import '../../core/services/draft_service.dart';
 
 /// Instance unique de la base de données, partagée par toute
@@ -125,6 +127,10 @@ final expensesRepositoryProvider = Provider<ExpensesRepository>(
 
 final loadingsRepositoryProvider = Provider<LoadingsRepository>(
   (ref) => LoadingsRepositoryImpl(ref.watch(databaseProvider)),
+);
+
+final promotionsRepositoryProvider = Provider<PromotionsRepository>(
+  (ref) => PromotionsRepositoryImpl(ref.watch(databaseProvider)),
 );
 
 final draftServiceProvider = Provider<DraftService>(

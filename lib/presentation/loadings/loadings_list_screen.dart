@@ -23,6 +23,15 @@ class LoadingsListScreen extends ConsumerWidget {
         title: const Text('Chargements'),
         actions: [
           Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: AppButton(
+              label: 'Simulateur',
+              icon: Icons.calculate_outlined,
+              isOutlined: true,
+              onPressed: () => context.push('/loadings/simulator'),
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.only(right: 16),
             child: AppButton(
               label: 'Nouveau chargement',

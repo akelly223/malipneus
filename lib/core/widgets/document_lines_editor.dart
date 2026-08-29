@@ -3,6 +3,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../domain/entities/article.dart';
 import '../../domain/entities/document_input.dart';
+import '../../domain/entities/promotion.dart';
 import '../../presentation/commercial_documents/providers/document_form_notifier.dart';
 import 'article_autocomplete_field.dart';
 import 'document_ligne_tile.dart';
@@ -26,6 +27,12 @@ class DocumentLinesEditor extends StatelessWidget {
   /// au-dessus du champ de recherche. Vide ou omis = rien n'est affiché.
   final List<ArticleEntity> articlesRecents;
 
+  /// Promotions actives à l'instant présent, indexées par articleId —
+  /// quand un article ajouté en a une, sa remise est prérempliée
+  /// automatiquement sur la ligne (via le champ "Remise %" existant,
+  /// modifiable ensuite comme n'importe quelle remise manuelle).
+  final Map<int, PromotionEntity> promotionsActives;
+
   const DocumentLinesEditor({
     super.key,
     required this.lignes,
@@ -35,9 +42,11 @@ class DocumentLinesEditor extends StatelessWidget {
     required this.onSupprimer,
     this.readOnly = false,
     this.articlesRecents = const [],
+    this.promotionsActives = const {},
   });
 
   void _ajouterArticle(ArticleEntity article) {
+    final promo = promotionsActives[article.id];
     // TVA maintenant gérée au niveau du document : on force tauxTva = 0.
     onAjouter(DocumentLigneInput(
       articleId: article.id,
@@ -46,6 +55,8 @@ class DocumentLinesEditor extends StatelessWidget {
       quantite: 1,
       prixUnitaireHt: article.prixVente,
       tauxTva: 0,
+      remiseLignePct: promo?.remisePourcentageDe(article.prixVente) ?? 0,
+      promotionId: promo?.id,
     ));
   }
 

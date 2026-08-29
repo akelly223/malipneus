@@ -47,6 +47,12 @@ class DocumentLigneInput {
   final double remiseLignePct;
   final String? notesLigne;
 
+  /// Promotion active au moment de l'ajout de cette ligne, si son prix
+  /// a été préremplié automatiquement par une promotion — voir
+  /// [DocumentLinesEditor]. Null si la ligne n'est pas issue d'une
+  /// promotion (article ordinaire, ou remise saisie manuellement).
+  final int? promotionId;
+
   const DocumentLigneInput({
     required this.articleId,
     required this.articleCode,
@@ -56,6 +62,7 @@ class DocumentLigneInput {
     required this.tauxTva,
     this.remiseLignePct = 0,
     this.notesLigne,
+    this.promotionId,
   });
 
   DocumentLigneInput copyWith({
@@ -67,6 +74,7 @@ class DocumentLigneInput {
     double? tauxTva,
     double? remiseLignePct,
     String? notesLigne,
+    int? promotionId,
   }) =>
       DocumentLigneInput(
         articleId: articleId ?? this.articleId,
@@ -77,6 +85,7 @@ class DocumentLigneInput {
         tauxTva: tauxTva ?? this.tauxTva,
         remiseLignePct: remiseLignePct ?? this.remiseLignePct,
         notesLigne: notesLigne ?? this.notesLigne,
+        promotionId: promotionId ?? this.promotionId,
       );
 }
 

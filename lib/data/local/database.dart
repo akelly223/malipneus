@@ -44,6 +44,7 @@ import 'tables/loadings_table.dart';
 import 'tables/stock_lots_table.dart';
 import 'tables/stock_lot_consumptions_table.dart';
 import 'tables/expense_allocations_table.dart';
+import 'tables/promotions_table.dart';
 
 import 'daos/users_dao.dart';
 import 'daos/stores_dao.dart';
@@ -67,6 +68,7 @@ import 'daos/commissions_dao.dart';
 import 'daos/expenses_dao.dart';
 import 'daos/loadings_dao.dart';
 import 'daos/stock_lots_dao.dart';
+import 'daos/promotions_dao.dart';
 
 import '../../core/constants/app_identity.dart';
 import '../../core/constants/db_constants.dart';
@@ -119,6 +121,8 @@ part 'database.g.dart';
     StockLots,
     StockLotConsumptions,
     ExpenseAllocations,
+    Promotions,
+    PromotionArticles,
   ],
   daos: [
     UsersDao,
@@ -143,6 +147,7 @@ part 'database.g.dart';
     ExpensesDao,
     LoadingsDao,
     StockLotsDao,
+    PromotionsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -150,7 +155,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -594,6 +599,26 @@ class AppDatabase extends _$AppDatabase {
             // ── Nom de chargement choisi par l'utilisateur ────────────────
             await _ajouterColonneSiAbsente('loadings', 'nom',
                 'ALTER TABLE loadings ADD COLUMN nom TEXT NULL');
+          }
+
+          if (from < 21) {
+            _log('Migration v21 : promotions commerciales par pneu');
+            await _creerTableSiAbsente(
+                'promotions', () => m.createTable(promotions));
+            await _creerTableSiAbsente('promotion_articles',
+                () => m.createTable(promotionArticles));
+          }
+
+          if (from < 22) {
+            _log('Migration v22 : lien ligne de vente ↔ promotion — '
+                'permet de mesurer la performance réelle d\'une '
+                'promotion (quantité vendue, chiffre d\'affaires, marge '
+                'perdue) au lieu d\'une estimation approximative.');
+            await _ajouterColonneSiAbsente(
+                'document_lines',
+                'promotion_id',
+                'ALTER TABLE document_lines ADD COLUMN '
+                    'promotion_id INTEGER NULL REFERENCES promotions(id)');
           }
 
           _log('Migration v$from → v$to terminée avec succès');

@@ -36,4 +36,18 @@ abstract class CommissionsRepository {
   Future<List<CommissionSettlementEntity>> getSettlementsForEmployee(
       int employeeId);
   Future<List<CommissionSettlementEntity>> getAllSettlements();
+
+  /// Détail vente par vente (client, date, article, montant) des
+  /// commissions dues et non encore réglées sur la période — pour
+  /// affichage et export PDF de preuve avant règlement.
+  Future<List<CommissionLigneDetailEntity>> getDetailCommissionsDues({
+    required int employeeId,
+    required DateTime debut,
+    required DateTime fin,
+  });
+
+  /// Détail vente par vente d'un règlement déjà effectué — pour
+  /// l'export PDF du reçu de paiement (preuve pour le commercial).
+  Future<List<CommissionLigneDetailEntity>> getDetailSettlement(
+      int settlementId);
 }

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'articles_table.dart';
 import 'commission_settlements_table.dart';
+import 'promotions_table.dart';
 
 /// Lignes d'une pièce commerciale (modèle Sage LIGNEPIECE).
 ///
@@ -54,4 +55,13 @@ class DocumentLines extends Table {
   /// tout double paiement par construction (voir [CommissionSettlements]).
   IntColumn get commissionSettlementId =>
       integer().nullable().references(CommissionSettlements, #id)();
+
+  /// Promotion active au moment de la saisie de cette ligne, si son
+  /// prix a été préremplié automatiquement par une promotion (voir
+  /// [DocumentLinesEditor]). Snapshot figé — une modification ou
+  /// suppression ultérieure de la promotion n'affecte pas les ventes
+  /// déjà enregistrées. Sert au calcul de performance d'une promotion
+  /// (quantité vendue, chiffre d'affaires, marge perdue).
+  IntColumn get promotionId =>
+      integer().nullable().references(Promotions, #id)();
 }

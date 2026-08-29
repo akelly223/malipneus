@@ -1,23 +1,21 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'commissions_dao.dart';
+part of 'promotions_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$CommissionsDaoMixin on DatabaseAccessor<AppDatabase> {
-  $JobPositionsTable get jobPositions => attachedDatabase.jobPositions;
-  $UsersTable get users => attachedDatabase.users;
-  $EmployeesTable get employees => attachedDatabase.employees;
-  $CommissionConfigsTable get commissionConfigs =>
-      attachedDatabase.commissionConfigs;
+mixin _$PromotionsDaoMixin on DatabaseAccessor<AppDatabase> {
+  $PromotionsTable get promotions => attachedDatabase.promotions;
   $CategoriesTable get categories => attachedDatabase.categories;
   $SuppliersTable get suppliers => attachedDatabase.suppliers;
+  $UsersTable get users => attachedDatabase.users;
   $LoadingsTable get loadings => attachedDatabase.loadings;
   $ArticlesTable get articles => attachedDatabase.articles;
-  $CommissionConfigOverridesTable get commissionConfigOverrides =>
-      attachedDatabase.commissionConfigOverrides;
+  $PromotionArticlesTable get promotionArticles =>
+      attachedDatabase.promotionArticles;
+  $JobPositionsTable get jobPositions => attachedDatabase.jobPositions;
+  $EmployeesTable get employees => attachedDatabase.employees;
   $CommissionSettlementsTable get commissionSettlements =>
       attachedDatabase.commissionSettlements;
-  $PromotionsTable get promotions => attachedDatabase.promotions;
   $DocumentLinesTable get documentLines => attachedDatabase.documentLines;
   $ClientsTable get clients => attachedDatabase.clients;
   $StoresTable get stores => attachedDatabase.stores;

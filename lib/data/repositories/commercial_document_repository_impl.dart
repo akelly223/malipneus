@@ -45,6 +45,7 @@ class CommercialDocumentRepositoryImpl
         commissionUnitaire: l.commissionUnitaire,
         commissionMontant: l.commissionMontant,
         commissionSettlementId: l.commissionSettlementId,
+        promotionId: l.promotionId,
       );
 
   DocumentPaiementEntity _toPaiementEntity(DocumentPayment p) =>
@@ -142,6 +143,7 @@ class CommercialDocumentRepositoryImpl
       totalTtc: Value(totaux.totalTtc),
       position: Value(position),
       notesLigne: Value(input.notesLigne),
+      promotionId: Value(input.promotionId),
     );
   }
 
@@ -694,6 +696,7 @@ class CommercialDocumentRepositoryImpl
           montantTva: Value(t.montantTva),
           totalTtc: Value(t.totalTtc),
           position: Value(l.position),
+          promotionId: Value(l.promotionId),
         );
       }).toList();
 

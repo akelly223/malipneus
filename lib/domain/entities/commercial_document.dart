@@ -36,6 +36,11 @@ class DocumentLigneEntity {
   final double? commissionMontant;
   final int? commissionSettlementId;
 
+  /// Promotion dont le prix a été préremplié automatiquement sur cette
+  /// ligne au moment de la vente — voir [DocumentLinesEditor]. Null si
+  /// la ligne n'est pas issue d'une promotion.
+  final int? promotionId;
+
   const DocumentLigneEntity({
     required this.id,
     required this.documentId,
@@ -54,6 +59,7 @@ class DocumentLigneEntity {
     this.commissionUnitaire,
     this.commissionMontant,
     this.commissionSettlementId,
+    this.promotionId,
   });
 }
 

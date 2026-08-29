@@ -193,4 +193,45 @@ class CommissionsRepositoryImpl implements CommissionsRepository {
     }
     return result;
   }
+
+  List<CommissionLigneDetailEntity> _detailFromRows(List<TypedResult> rows) {
+    return rows.map((row) {
+      final ligne = row.readTable(db.documentLines);
+      final doc = row.readTable(db.commercialDocuments);
+      final client = row.readTableOrNull(db.clients);
+      return CommissionLigneDetailEntity(
+        documentLineId: ligne.id,
+        documentId: doc.id,
+        documentNumero: doc.numero,
+        dateDocument: doc.dateDocument,
+        clientNom: client?.nom,
+        articleNom: ligne.articleNom,
+        quantite: ligne.quantite,
+        totalLigneHt: ligne.totalHt,
+        commissionMontant: ligne.commissionMontant ?? 0,
+      );
+    }).toList();
+  }
+
+  @override
+  Future<List<CommissionLigneDetailEntity>> getDetailCommissionsDues({
+    required int employeeId,
+    required DateTime debut,
+    required DateTime fin,
+  }) async {
+    final rows = await db.commissionsDao.getLignesCommissionDetailNonReglees(
+      employeeId: employeeId,
+      debut: debut,
+      fin: fin,
+    );
+    return _detailFromRows(rows);
+  }
+
+  @override
+  Future<List<CommissionLigneDetailEntity>> getDetailSettlement(
+      int settlementId) async {
+    final rows = await db.commissionsDao
+        .getLignesCommissionDetailPourSettlement(settlementId);
+    return _detailFromRows(rows);
+  }
 }

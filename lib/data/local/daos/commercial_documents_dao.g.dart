@@ -17,6 +17,7 @@ mixin _$CommercialDocumentsDaoMixin on DatabaseAccessor<AppDatabase> {
   $ArticlesTable get articles => attachedDatabase.articles;
   $CommissionSettlementsTable get commissionSettlements =>
       attachedDatabase.commissionSettlements;
+  $PromotionsTable get promotions => attachedDatabase.promotions;
   $DocumentLinesTable get documentLines => attachedDatabase.documentLines;
   $DocumentPaymentsTable get documentPayments =>
       attachedDatabase.documentPayments;

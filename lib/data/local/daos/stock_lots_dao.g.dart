@@ -17,6 +17,7 @@ mixin _$StockLotsDaoMixin on DatabaseAccessor<AppDatabase> {
   $EmployeesTable get employees => attachedDatabase.employees;
   $CommissionSettlementsTable get commissionSettlements =>
       attachedDatabase.commissionSettlements;
+  $PromotionsTable get promotions => attachedDatabase.promotions;
   $DocumentLinesTable get documentLines => attachedDatabase.documentLines;
   $StockMovementsTable get stockMovements => attachedDatabase.stockMovements;
   $StockLotConsumptionsTable get stockLotConsumptions =>

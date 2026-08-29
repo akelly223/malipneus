@@ -53,6 +53,9 @@ import '../../presentation/commissions/commission_settlement_screen.dart';
 import '../../presentation/expenses/expenses_list_screen.dart';
 import '../../presentation/loadings/loadings_list_screen.dart';
 import '../../presentation/loadings/loading_detail_screen.dart';
+import '../../presentation/loadings/loading_simulator_screen.dart';
+import '../../presentation/promotions/promotions_list_screen.dart';
+import '../../presentation/promotions/promotion_detail_screen.dart';
 import '../../core/import/import_config.dart';
 import '../../domain/entities/document_type.dart';
 
@@ -352,9 +355,25 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const LoadingsListScreen(),
           ),
           GoRoute(
+            path: '/loadings/simulator',
+            builder: (context, state) => const LoadingSimulatorScreen(),
+          ),
+          GoRoute(
             path: '/loadings/:id',
             builder: (context, state) => LoadingDetailScreen(
               loadingId: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+
+          // Promotions commerciales (réservé admin)
+          GoRoute(
+            path: '/promotions',
+            builder: (context, state) => const PromotionsListScreen(),
+          ),
+          GoRoute(
+            path: '/promotions/:id',
+            builder: (context, state) => PromotionDetailScreen(
+              promotionId: int.parse(state.pathParameters['id']!),
             ),
           ),
 

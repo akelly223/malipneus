@@ -114,6 +114,55 @@ class CommissionsDao extends DatabaseAccessor<AppDatabase>
     );
   }
 
+  /// Même filtre que [getLignesCommissionABReglerBrutes], avec en plus
+  /// le client de chaque vente (jointure externe, un document peut ne
+  /// pas avoir de client enregistré) — pour l'affichage détaillé et
+  /// l'export PDF de preuve avant règlement.
+  Future<List<TypedResult>> getLignesCommissionDetailNonReglees({
+    required int employeeId,
+    required DateTime debut,
+    required DateTime fin,
+  }) {
+    final query = select(documentLines).join([
+      innerJoin(
+        commercialDocuments,
+        commercialDocuments.id.equalsExp(documentLines.documentId),
+      ),
+      leftOuterJoin(
+        attachedDatabase.clients,
+        attachedDatabase.clients.id.equalsExp(commercialDocuments.clientId),
+      ),
+    ])
+      ..where(commercialDocuments.vendeurEmployeeId.equals(employeeId) &
+          (commercialDocuments.statut.equals('valide') |
+              commercialDocuments.statut.equals('transforme')) &
+          commercialDocuments.dateDocument.isBiggerOrEqualValue(debut) &
+          commercialDocuments.dateDocument.isSmallerOrEqualValue(fin) &
+          documentLines.commissionSettlementId.isNull() &
+          documentLines.commissionMontant.isBiggerThanValue(0))
+      ..orderBy([OrderingTerm.asc(commercialDocuments.dateDocument)]);
+    return query.get();
+  }
+
+  /// Détail (avec client) des lignes réglées par [settlementId] — pour
+  /// l'export PDF du reçu de règlement remis au commercial.
+  Future<List<TypedResult>> getLignesCommissionDetailPourSettlement(
+      int settlementId) {
+    final query = select(documentLines).join([
+      innerJoin(
+        commercialDocuments,
+        commercialDocuments.id.equalsExp(documentLines.documentId),
+      ),
+      leftOuterJoin(
+        attachedDatabase.clients,
+        attachedDatabase.clients.id.equalsExp(commercialDocuments.clientId),
+      ),
+    ])
+      ..where(documentLines.commissionSettlementId.equals(settlementId))
+      ..orderBy([OrderingTerm.asc(commercialDocuments.dateDocument)]);
+    return query.get();
+  }
+
   Future<int> createSettlement(CommissionSettlementsCompanion settlement) =>
       into(commissionSettlements).insert(settlement);
 
