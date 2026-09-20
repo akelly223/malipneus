@@ -11,9 +11,15 @@
 
 #define MyAppName "MaliPneus"
 #define MyAppShortName "MaliPneus"
-#define MyAppVersion "3.1.0"
+#define MyAppVersion "3.2.0"
 #define MyAppPublisher "MALI_CODE CENTER"
 #define MyAppExeName "mali_pneus.exe"
+; Association du format de fichier de données .mstk (voir [Registry]
+; ci-dessous). ProgID arbitraire mais stable — ne pas renommer une
+; fois publié, des utilisateurs en dépendraient déjà pour ouvrir leurs
+; fichiers par double-clic.
+#define MyAppAssocExt ".mstk"
+#define MyAppAssocKey "MaliPneus.Dossier"
 ; Chemin vers le dossier généré par `flutter build windows`, relatif
 ; à ce fichier .iss. À ajuster si l'emplacement diffère chez vous.
 #define BuildDir "..\build\windows\x64\runner\Release"
@@ -74,6 +80,20 @@ Name: "startupicon"; Description: "Lancer {#MyAppShortName} au démarrage de Win
 ; car Flutter Windows a besoin de ses DLL et assets pour fonctionner.
 Source: "{#BuildDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[Registry]
+; Association du format de fichier .mstk : double-cliquer un fichier
+; .mstk lance MaliPneus avec son chemin en argument (voir
+; windows/runner/main.cpp). HKCR (racine de la fusion HKLM/HKCU) est
+; cohérent avec PrivilegesRequired=admin ci-dessus.
+Root: HKCR; Subkey: "{#MyAppAssocExt}"; ValueType: string; ValueName: ""; \
+    ValueData: "{#MyAppAssocKey}"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "{#MyAppAssocKey}"; ValueType: string; ValueName: ""; \
+    ValueData: "Dossier de données MaliPneus"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "{#MyAppAssocKey}\DefaultIcon"; ValueType: string; \
+    ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKCR; Subkey: "{#MyAppAssocKey}\shell\open\command"; ValueType: string; \
+    ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+
 [Icons]
 ; Menu Démarrer (toujours créé).
 Name: "{group}\{#MyAppShortName}"; Filename: "{app}\{#MyAppExeName}"
@@ -100,6 +120,13 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Lancer {#MyAppShortName} mainte
 Type: filesandordirs; Name: "{app}\data\flutter_assets\.last_build_id"
 
 [Code]
+const
+  SHCNE_ASSOCCHANGED = $08000000;
+  SHCNF_IDLIST = $0000;
+
+procedure SHChangeNotify(wEventId: Longint; uFlags: Longint; dwItem1, dwItem2: Longint);
+  external 'SHChangeNotify@shell32.dll stdcall';
+
 { Vérifie au lancement de l'installateur si une version est déjà
   installée, pour informer l'utilisateur qu'il s'agit d'une mise à
   jour (les données existantes ne sont jamais touchées par Setup,
@@ -107,6 +134,17 @@ Type: filesandordirs; Name: "{app}\data\flutter_assets\.last_build_id"
 function InitializeSetup(): Boolean;
 begin
   Result := True;
+end;
+
+{ Après installation, notifie l'Explorateur que l'association .mstk
+  vient de changer, pour que la nouvelle icône/commande soit prise en
+  compte sans redémarrage de session. }
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
+  end;
 end;
 
 { ============================================================
