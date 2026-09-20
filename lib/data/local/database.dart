@@ -156,7 +156,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -169,6 +169,7 @@ class AppDatabase extends _$AppDatabase {
           // de paie) doivent être semées ici aussi pour que les modules
           // Personnel/Dépenses ne soient pas vides à l'installation.
           await _seederDonneesReferenceV18();
+          await _creerIndexesPerformance();
           _log('onCreate terminé avec succès');
         },
 
@@ -622,6 +623,12 @@ class AppDatabase extends _$AppDatabase {
                     'promotion_id INTEGER NULL REFERENCES promotions(id)');
           }
 
+          if (from < 23) {
+            _log('Migration v23 : index de performance (tableau de bord '
+                'et écrans listant des documents/lignes)');
+            await _creerIndexesPerformance();
+          }
+
           _log('Migration v$from → v$to terminée avec succès');
         },
 
@@ -658,6 +665,56 @@ class AppDatabase extends _$AppDatabase {
     } else {
       await customStatement(sql);
       _log('  colonne "$table.$colonne" ajoutée');
+    }
+  }
+
+  /// Index sur les colonnes utilisées dans les jointures/filtres des
+  /// requêtes les plus répétées (tableau de bord : `getStats()` exécute
+  /// plusieurs fois la même jointure `document_lines` ⋈
+  /// `commercial_documents` ⋈ `articles`, un `SCAN` complet de
+  /// `document_lines` faute d'index — voir la discussion de
+  /// performance d'ouverture de fichier, portée depuis
+  /// gestion_commerciale). `IF NOT EXISTS` : idempotent, sûr à rejouer
+  /// sur une base où certains index existeraient déjà.
+  ///
+  /// `articles.supplier_id` et `suppliers.est_depot` ne sont PAS
+  /// indexés ici : ces colonnes ont été retirées du schéma Dart lors du
+  /// retrait de la logique dépôt-vente/auteur (v19) — elles n'existent
+  /// plus sur une base créée avec le schéma actuel.
+  Future<void> _creerIndexesPerformance() async {
+    const index = <String, String>{
+      'ix_document_lines_document_id':
+          'CREATE INDEX IF NOT EXISTS ix_document_lines_document_id ON document_lines(document_id)',
+      'ix_document_lines_article_id':
+          'CREATE INDEX IF NOT EXISTS ix_document_lines_article_id ON document_lines(article_id)',
+      'ix_commercial_documents_type_statut':
+          'CREATE INDEX IF NOT EXISTS ix_commercial_documents_type_statut ON commercial_documents(type, statut)',
+      'ix_commercial_documents_date_creation':
+          'CREATE INDEX IF NOT EXISTS ix_commercial_documents_date_creation ON commercial_documents(date_creation)',
+      'ix_commercial_documents_client_id':
+          'CREATE INDEX IF NOT EXISTS ix_commercial_documents_client_id ON commercial_documents(client_id)',
+      'ix_invoice_items_invoice_id':
+          'CREATE INDEX IF NOT EXISTS ix_invoice_items_invoice_id ON invoice_items(invoice_id)',
+      'ix_invoice_items_article_id':
+          'CREATE INDEX IF NOT EXISTS ix_invoice_items_article_id ON invoice_items(article_id)',
+      'ix_invoices_client_id':
+          'CREATE INDEX IF NOT EXISTS ix_invoices_client_id ON invoices(client_id)',
+      'ix_articles_actif':
+          'CREATE INDEX IF NOT EXISTS ix_articles_actif ON articles(actif)',
+      'ix_purchases_date_creation_statut':
+          'CREATE INDEX IF NOT EXISTS ix_purchases_date_creation_statut ON purchases(date_creation, statut)',
+      'ix_quotes_date_creation':
+          'CREATE INDEX IF NOT EXISTS ix_quotes_date_creation ON quotes(date_creation)',
+    };
+    for (final entry in index.entries) {
+      try {
+        await customStatement(entry.value);
+        _log('  index "${entry.key}" créé (ou déjà présent)');
+      } catch (e) {
+        // Défensif : une table pas encore créée (ordre de migration sur
+        // une très vieille base) ne doit jamais faire échouer l'ouverture.
+        _log('  index "${entry.key}" ignoré ($e)');
+      }
     }
   }
 
