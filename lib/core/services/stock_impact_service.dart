@@ -84,6 +84,48 @@ class StockImpactService {
     }
   }
 
+  /// Reverse le stock d'une vente comptoir directe (facture créée déjà
+  /// validée par `creerVenteRapide`, sans BL en amont). Ce cas ne passe pas
+  /// par [DocumentType.impacteStockValidation] : le stock est décrémenté à
+  /// la création avec `reference == numéro du document` (pas de préfixe,
+  /// contrairement aux mouvements BL/BR). On cible donc les mouvements de
+  /// sortie réellement enregistrés pour ce document plutôt que de
+  /// recalculer depuis ses lignes — no-op si le document n'a jamais
+  /// décrémenté le stock lui-même (facture normale, issue d'un BL, etc.).
+  Future<void> reverserVenteDirecte(DocumentEntity doc, int userId) async {
+    final mouvements =
+        await _db.stockDao.getMovementsByReference(doc.numero);
+
+    for (final m in mouvements) {
+      if (m.typeMouvement != 'sortie') continue;
+      await _db.articlesDao.adjustStock(
+        articleId: m.articleId,
+        storeId: m.storeId,
+        delta: m.quantite,
+      );
+      await _db.stockDao.createMovement(
+        StockMovementsCompanion.insert(
+          articleId: m.articleId,
+          storeId: m.storeId,
+          typeMouvement: 'entree',
+          quantite: m.quantite,
+          reference: Value('VENTE-ANNULEE:${doc.numero}'),
+          userId: userId,
+        ),
+      );
+      // Même logique que reverserSortieBonLivraison : réintègre un lot au
+      // coût d'achat de référence, sans lien direct vers les lots FIFO
+      // consommés par la sortie d'origine.
+      await _lots.enregistrerEntree(
+        articleId: m.articleId,
+        storeId: m.storeId,
+        quantite: m.quantite,
+        coutUnitaire: await _coutAchatArticle(m.articleId),
+        sourceType: 'retour',
+      );
+    }
+  }
+
   /// Incrémente le stock pour chaque ligne du BR.
   /// Appelé lors de la validation d'un bon de retour.
   Future<void> appliquerEntreeBonRetour(
