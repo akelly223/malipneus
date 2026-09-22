@@ -9,7 +9,12 @@ import 'package:uuid/uuid.dart';
 /// cachet), et le dossier est supprimé à la fermeture — jamais de
 /// `.sqlite`/`-wal`/`-shm` visible ailleurs qu'ici, temporairement.
 abstract final class TempWorkspaceService {
-  static const _prefixe = 'mstk_session_';
+  // Préfixe propre à MaliPneus : `getTemporaryDirectory()` renvoie le
+  // dossier %TEMP% partagé par TOUT le système Windows, pas un dossier
+  // par app. Les apps sœurs (malistock_pro, gestion_commerciale) tournent
+  // avec un préfixe différent pour que le nettoyage au démarrage de
+  // l'une ne supprime jamais le dossier de travail actif d'une autre.
+  static const _prefixe = 'mstk_session_malipneus_';
 
   /// Crée un nouveau dossier de travail vide, au nom unique.
   static Future<Directory> creerDossier() async {
