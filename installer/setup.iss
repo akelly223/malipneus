@@ -11,7 +11,7 @@
 
 #define MyAppName "MaliPneus"
 #define MyAppShortName "MaliPneus"
-#define MyAppVersion "3.2.0"
+#define MyAppVersion "3.6.0"
 #define MyAppPublisher "MALI_CODE CENTER"
 #define MyAppExeName "mali_pneus.exe"
 ; Association du format de fichier de données .mstk (voir [Registry]
